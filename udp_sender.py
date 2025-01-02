@@ -1,17 +1,27 @@
 import asyncio
 import socket
-from datetime import datetime
 
 
 class UdpSender:
 
     def __init__(self, host, port):
         self.address = (host, port)
+        self.socket = None
 
-    def send(self, values):
+    def send(self, values, close=True):
         message_bytes = bytearray(values)
-        asyncio.run(self._send(message_bytes))
+        if self.socket is None:
+            self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.socket.sendto(message_bytes, self.address)
+        if close:
+            self.close()
+        # asyncio.run(self._send(message_bytes))
         # print(datetime.now().isoformat(), "UdpSender sent:", values, "to", self.address)
+
+    def close(self):
+        if self.socket is not None:
+            self.socket.close()
+            self.socket = None
 
     async def _send(self, message: bytearray):
         try:

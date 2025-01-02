@@ -20,17 +20,42 @@ UDP_MODE_DRGB = 2
 
 
 @dataclass
+class PointPattern:
+    pos = 0
+    color = [0, 0, 0]
+    speed = 0
+    speed_sign = +1
+    width = 1
+    fade = 0.95
+
+    def randomize_color(self):
+        for i in range(len(self.color)):
+            self.color[i] = randint(0, 255)
+
+    def init_movement(self, width=1):
+        # speed is amount of pixels per second
+        self.pos = 0
+        self.speed = 15
+        self.width = width
+
+    def to_json(self):
+        return {
+            "pos": self.pos,
+            "color": dumps(self.color),
+            "speed": self.speed_sign * self.speed,
+            "width": self.width,
+            "fade": self.fade,
+        }
+
+
+@dataclass
 class SequenceState:
     loop: Any = None
     leds: List[int] = 0
+    step: Optional[int] = None
     elapsed_sec: Optional[int] = None
 
-    # moving point pattern
-    point_pos = 0
-    point_color = (0, 0, 0)
-    point_speed = 0
-    point_width = 1
-    point_fade = 0.9
+    point = PointPattern()
 
 
 @dataclass
@@ -49,7 +74,7 @@ class SequenceMan:
 
     instance = None
     state: SequenceState
-    sender: UdpSender
+    sender: Optional[UdpSender] = None
 
     @classmethod
     def get_instance(cls):
@@ -68,7 +93,9 @@ class SequenceMan:
     def get_state_dict(self):
         return {
             "running": self.sequence_running,
-            "elapsed_sec": self.state.elapsed_sec
+            "elapsed_sec": self.state.elapsed_sec,
+            "leds": self.state.leds,
+            "point": self.state.point.to_json(),
         }
 
     def get_state_json(self):
@@ -92,37 +119,48 @@ class SequenceMan:
         return self.state.loop is not None
 
     def start_sequence(self):
+        self.state.point.randomize_color()
         if self.sequence_running:
-            self.randomize_point_color()
             return
 
-        sender = self.make_sender()
+        self.sender = self.make_sender()
         start_sec = perf_counter()
-        s = self.state
         self.init_leds()
-        self.init_point()
+        s = self.state
+        s.elapsed_sec = 0
+        s.point.init_movement()
+        period_ms = 50
 
         def run():
-            s.elapsed_sec = perf_counter() - start_sec
-            s.point_pos += s.point_speed * s.elapsed_sec
-            if s.point_pos >= self.setup.led_count - 1:
-                s.point_speed = -1
-            if s.point_pos <= 0:
-                s.point_speed = +1
+            p = s.point
+            p_max = self.setup.led_count - 1
 
-            for p in range(self.setup.led_count):
-                i = 3 * p
+            last_elapsed_sec = s.elapsed_sec
+            s.elapsed_sec = perf_counter() - start_sec
+            delta_sec = s.elapsed_sec - last_elapsed_sec
+
+            p.pos += p.speed * p.speed_sign * delta_sec
+            if p.pos >= p_max and p.speed_sign > 0:
+                p.pos = p_max
+                p.speed_sign = -1
+            if p.pos <= 0 and p.speed_sign < 0:
+                p.pos = 0
+                p.speed_sign = +1
+
+            for pixel in range(self.setup.led_count):
+                i = 3 * pixel
                 # fade the current color
                 for c in range(3):
-                    self.state.leds[i+c] = int(s.point_fade * self.state.leds[i+c])
+                    self.state.leds[i+c] = int(p.fade * self.state.leds[i+c])
                 # apply new point at current position
-                if abs(p - s.point_pos < 0.5 * s.point_width):
-                    self.state.leds[i:i+3] = s.point_color
+                if abs(pixel - p.pos) < p.width:
+                    self.state.leds[i:i+3] = p.color
 
-            timeout_sec = 2
-            sender.send([UDP_MODE_DRGB, timeout_sec, *self.state.leds])
+            timeout_sec = 1
+            self.sender.send([UDP_MODE_DRGB, timeout_sec, *self.state.leds], close=False)
 
-        self.state.loop = PeriodicCallback(run, 200)
+        print("Start a loop, currently", self.state.loop, "; milliseconds:", period_ms)
+        self.state.loop = PeriodicCallback(run, period_ms)
         self.state.loop.start()
 
     def stop_sequence(self):
@@ -131,18 +169,9 @@ class SequenceMan:
         self.state.loop.stop()
         self.state.loop = None
         self.state.elapsed_sec = None
+        if self.sender is not None:
+            self.sender.close()
+            self.sender = None
 
     def init_leds(self):
         self.state.leds = [0 for _ in range(self.setup.led_count * 3)]
-
-    def init_point(self):
-        self.state.point_pos = 0
-        self.state.point_speed = 0
-        self.state.point_width = 1
-
-    def randomize_point_color(self):
-        self.state.point_color = (
-            randint(0, 255),
-            randint(0, 255),
-            randint(0, 255),
-        )

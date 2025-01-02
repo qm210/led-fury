@@ -36,6 +36,19 @@
         h1 {
             margin: 0.5rem 0;
         }
+
+        #preview table {
+            width: 100%;
+            table-layout: fixed;
+            border-collapse: collapse;
+        }
+
+        #preview td {
+            border: 1px solid black;
+            text-align: center;
+            padding: 0.5rem 0;
+            font-size: smaller;
+        }
     </style>
 
     <script>
@@ -52,15 +65,77 @@
             .catch(console.warn);
         }
 
+        let refreshTimer;
+
         function onLoad(state) {
             console.log("Sequence State", state);
+            updatePreview(state);
+
+            if (refreshTimer) {
+                clearInterval(refreshTimer);
+            }
+            refreshTimer = setInterval(() => {
+                fetch('/sequence')
+                    .then(r => r.json())
+                    .then(updatePreview)
+                    .catch((err) => {
+                        console.warn(err);
+                        clearInterval(refreshTimer);
+                    });
+            }, 100);
+        }
+
+        function updatePreview(state) {
+            const preview = document.getElementById("preview");
+            if (!preview) {
+                return;
+            }
+            preview.innerHTML = "";
+            if (!state.leds?.length || !state.running) {
+                return;
+            }
+            preview.appendChild(createPreview(state.leds));
+            preview.appendChild(createInfo(state));
+        }
+
+        function createPreview(leds) {
+            const n = Math.round(leds.length / 3);
+            const table = document.createElement("table");
+            const row = table.insertRow();
+            for (let pixel = 0; pixel < n; pixel++) {
+                const cell = row.insertCell();
+                const color = leds.slice(3 * pixel, 3 * pixel + 3)
+                const isDark = (color[0] + color[1] + color[2]) < 100
+                cell.textContent = pixel.toString();
+                cell.style.backgroundColor = `rgba(${color.join(',')},1)`;
+                cell.style.color = isDark ? "white" : "black";
+            }
+            return table;
+        }
+
+        function createInfo(state) {
+            const div = document.createElement("div");
+            div.style.padding = "1rem";
+            const infos = [
+                ["Point Position", state.point.pos],
+                ["Point Speed", state.point.speed],
+                ["Point Width", state.point.width],
+                ["Point Color", state.point.color],
+                ["Point Fade", state.point.fade],
+            ];
+            for (const info of infos) {
+                const line = document.createElement("div");
+                line.textContent = `${info[0]}: ${info[1]}`;
+                div.appendChild(line);
+            }
+            return div;
         }
     </script>
 
 </head>
 
 <body onload="onLoad({{ state }})">
-    <h1>
+    <h1 ondblclick="fetch('/shutdown').then(() => location.reload())">
         Hello Bello
     </h1>
     <div class="column" style="gap: 1rem">
@@ -75,6 +150,7 @@
                 stop sequence
             </button>
         </div>
+        <div id="preview"></div>
     </div>
 </body>
 

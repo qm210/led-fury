@@ -4,7 +4,6 @@ from SequenceMan import SequenceMan
 
 
 class StartSequenceHandler(RequestHandler):
-
     def post(self):
         man = SequenceMan.get_instance()
         man.start_sequence()
@@ -12,8 +11,13 @@ class StartSequenceHandler(RequestHandler):
 
 
 class StopSequenceHandler(RequestHandler):
-
     def post(self):
         man = SequenceMan.get_instance()
         man.stop_sequence()
         self.write(man.get_state_dict())
+
+
+class SequenceInfoHandler(RequestHandler):
+    def get(self):
+        man = SequenceMan.get_instance()
+        self.write(man.get_state_json())
