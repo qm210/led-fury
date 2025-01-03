@@ -34,7 +34,7 @@
         }
 
         h1 {
-            margin: 0.5rem 0;
+            margin: 0;
         }
 
         #preview table {
@@ -135,7 +135,9 @@
 </head>
 
 <body onload="onLoad({{ state }})">
-    <h1 ondblclick="fetch('/shutdown').then(() => location.reload())">
+    <h1 ondblclick="fetch('/shutdown').then(() => location.reload())"
+        style="margin-bottom: 0.5rem"
+    >
         Hello Bello
     </h1>
     <div class="column" style="gap: 1rem">

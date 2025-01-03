@@ -1,6 +1,7 @@
 import tornado
 
-from SequenceMan import SequenceMan
+from logic.color import create_flat_rgb_gradient
+from service.SequenceMan import SequenceMan
 
 
 class SingleHandler(tornado.web.RequestHandler):
@@ -18,9 +19,10 @@ class SingleHandler(tornado.web.RequestHandler):
         sender.send([
             2,
             2,
-            *man.create_rgb_gradient(
-                255, 0, 128,
-                0, 180, 240,
+            *create_flat_rgb_gradient(
+                man.state.max_length,
+                [255, 0, 128],
+                [0, 180, 240],
             )
         ])
         self.write({"message": "thanks for the post"})

@@ -2,7 +2,7 @@ import asyncio
 
 from tornado.web import RequestHandler
 
-from SequenceMan import SequenceMan
+from service.SequenceMan import SequenceMan
 
 
 class MainHandler(RequestHandler):

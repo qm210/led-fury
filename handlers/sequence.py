@@ -1,12 +1,12 @@
 from tornado.web import RequestHandler
 
-from SequenceMan import SequenceMan
+from service.SequenceMan import SequenceMan
 
 
 class StartSequenceHandler(RequestHandler):
     def post(self):
         man = SequenceMan.get_instance()
-        man.start_sequence()
+        man.start_sample_sequence()
         self.write(man.get_state_dict())
 
 
