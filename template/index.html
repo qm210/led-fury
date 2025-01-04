@@ -91,10 +91,10 @@
                 return;
             }
             preview.innerHTML = "";
-            if (!state.leds?.length || !state.running) {
+            if (!state.values?.length || !state.running) {
                 return;
             }
-            preview.appendChild(createPreview(state.leds));
+            preview.appendChild(createPreview(state.values));
             preview.appendChild(createInfo(state));
         }
 
@@ -114,20 +114,27 @@
         }
 
         function createInfo(state) {
+            const point = state.first_instance;
+            if (!point) {
+                return;
+            }
             const div = document.createElement("div");
             div.style.padding = "1rem";
             const infos = [
-                ["Point Position", state.point.pos],
-                ["Point Speed", state.point.speed],
-                ["Point Width", state.point.width],
-                ["Point Color", state.point.color],
-                ["Point Fade", state.point.fade],
+                ["Point Position", point.pos],
+                ["Point Motion", point.motion],
+                ["Point Size", point.width],
+                ["Point Color", point.color],
             ];
-            for (const info of infos) {
+
+            function appendInfo(text) {
                 const line = document.createElement("div");
-                line.textContent = `${info[0]}: ${info[1]}`;
+                line.textContent = text;
                 div.appendChild(line);
             }
+
+            appendInfo(`Position ${point.pos[0]} (segment ${point.pos[1]})`);
+            appendInfo(`Velocity ${point.motion[0].vel * point.motion[0].sign}`);
             return div;
         }
     </script>

@@ -1,12 +1,27 @@
+from colorsys import hsv_to_rgb
 from dataclasses import dataclass
 from random import randint
+from typing import Tuple, Self
+
+import numpy as np
+from numpy.typing import NDArray
+
+
+hsv_dtype = np.dtype([
+    ('hue', np.float64),
+    ('sat', np.float64),
+    ('val', np.float64)
+])
+
+HsvColorArray = NDArray[hsv_dtype]
+ArrayIndices = NDArray[Tuple[int, int]]
 
 
 @dataclass
 class HsvColor:
-    h: int = 0
-    s: int = 0
-    v: int = 0
+    h: float = 0
+    s: float = 0
+    v: float = 0
 
     @classmethod
     def Random(cls, h=None, s=None, v=None):
@@ -27,6 +42,24 @@ class HsvColor:
             self.h = randint(0, 360)
         else:
             self.h = (self.h + randint(-delta, delta)) % 360
+
+    def scale_v(self, factor: float):
+        self.v = factor * self.v
+        if self.v < 1:
+            self.v = 0
+        if self.v > 100:
+            self.v = 100
+
+    def copy(self):
+        return HsvColor(self.h, self.s, self.v)
+
+    def add(self, other: Self):
+        # naive mixing model: ... TODO ...
+        pass
+
+    def to_rgb(self):
+        r, g, b = hsv_to_rgb(self.h/360, self.s/100, self.v/100)
+        return [255 * r, 255 * g, 255 * b]
 
 
 def create_flat_rgb_gradient(length, rgb1, rgb2):

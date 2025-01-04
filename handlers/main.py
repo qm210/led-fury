@@ -7,7 +7,8 @@ from service.SequenceMan import SequenceMan
 
 class MainHandler(RequestHandler):
     def get(self):
-        sequence_json = SequenceMan.get_instance().get_state_json()
+        man = SequenceMan.get_instance()
+        sequence_json = man.get_state_json()
         self.render("../template/index.html", state=sequence_json)
 
 

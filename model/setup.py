@@ -5,7 +5,7 @@ from typing import List
 @dataclass
 class LedSegment:
     length: int
-    start: int = 0
+    start: int = 0  # TODO: not supported yet
 
 
 @dataclass
