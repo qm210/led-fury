@@ -3,6 +3,7 @@ import {useAllTheStuff, useSequence} from "../api/apiHooks.js";
 import {ControlButtons} from "../components/ControlButtons.jsx";
 import {useEffect, useMemo, useState} from "react";
 import {useWebSocket} from "../api/useWebSocket.js";
+import Slider from "rc-slider";
 
 
 const EditorPage = () => {
@@ -155,14 +156,13 @@ const EditPatterns = ({patterns, selectedId}) => {
                 }}
             >
             {
-                    patterns.map((p, index) =>
+                    patterns.map((p) =>
                         <li key={p.id}
                             class="cursor-pointer hover:bg-white"
-                            style={{
-                                backgroundColor: selectedId === p.id
-                                    ? "#FFF6"
-                                    : undefined,
-                            }}
+                            style={selectedId === p.id ? {
+                                backgroundColor: "#FFF6",
+                                fontWeight: "bold"
+                            } : {}}
                         >
                             {p.name || p.id}
                         </li>
@@ -186,20 +186,18 @@ const EditPattern = ({patterns, selectedId, is2d}) => {
 
     // TODO: all parameters, and make editable
 
+    const [fade, setFade] = useState(pattern.fade);
+
     return (
         <div class="flex-1 flex flex-col">
             <div>
-                Selected Pattern
+                Selected Pattern: <b>{pattern.name ?? pattern.id}</b>
             </div>
             <table
                 class="w-full border-2 rounded-sm border-gray-300"
                 onClick={() => console.log(pattern)}
             >
                 <tbody>
-                <tr>
-                    <td>Name</td>
-                    <td>{pattern.name}</td>
-                </tr>
                 {/* start_sec, stop_sec*/}
                 <tr>
                     <td>Type</td>
@@ -208,6 +206,15 @@ const EditPattern = ({patterns, selectedId, is2d}) => {
                 <tr>
                     <td>Fade Factor</td>
                     <td>{pattern.fade}</td>
+                    <td width="80px" class={"pr-4"}>
+                        <Slider
+                            min={0}
+                            max={100}
+                            step={1}
+                            value={100 * fade}
+                            onChange={e => setFade(0.01 * e)}
+                        />
+                    </td>
                 </tr>
                 <tr class="border-t border-2 border-gray-300">
                 </tr>

@@ -5,11 +5,13 @@ import {QueryClient, QueryClientProvider} from "@preact-signals/query";
 import EditorPage from './pages/Editor.jsx';
 import { NotFound } from './pages/_404.jsx';
 
-import './styles/index.css';
-import './styles/dist.css';
 import {Header} from "./components/Header.jsx";
 import Loader from "./components/Loader.jsx";
-import {Suspense} from "react"; // tailwind build, generate via "npm run tailwind:build"
+import {Suspense} from "react";
+
+import './styles/index.css';
+import './styles/dist.css'; // tailwind build, generate via "npm run tailwind:build"
+import 'rc-slider/assets/index.css';
 
 const queryClient = new QueryClient();
 

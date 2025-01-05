@@ -657,6 +657,10 @@ video {
   padding: 2rem;
 }
 
+.pr-4 {
+  padding-right: 1rem;
+}
+
 .align-top {
   vertical-align: top;
 }
