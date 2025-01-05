@@ -1,10 +1,10 @@
 from dataclasses import dataclass, field
-from datetime import datetime
 from enum import Enum
 from typing import Union, Optional, TYPE_CHECKING
 
 from logic.color import HsvColorArray
 from logic.patterns.PointPattern import PointPattern
+from logic.time import current_timestamp
 
 if TYPE_CHECKING:
     from model.state import SequenceState
@@ -13,10 +13,6 @@ if TYPE_CHECKING:
 
 class PatternType(Enum):
     Point = "point"
-
-
-def current_timestamp():
-    return datetime.now().strftime("%Y%m%d-%H%M%S")
 
 
 @dataclass

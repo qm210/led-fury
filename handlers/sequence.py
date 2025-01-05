@@ -1,23 +1,18 @@
-from tornado.web import RequestHandler
-
-from service.SequenceMan import SequenceMan
+from app.handler import ManHandler
 
 
-class StartSequenceHandler(RequestHandler):
+class StartSequenceHandler(ManHandler):
     def post(self):
-        man = SequenceMan.get_instance()
-        man.start_sample_sequence()
-        self.write(man.get_state_json())
+        self.man.start_sample_sequence()
+        self.write(self.man.get_state_json())
 
 
-class StopSequenceHandler(RequestHandler):
+class StopSequenceHandler(ManHandler):
     def post(self):
-        man = SequenceMan.get_instance()
-        man.stop_sequence()
-        self.write(man.get_state_json())
+        self.man.stop_sequence()
+        self.write(self.man.get_state_json())
 
 
-class SequenceInfoHandler(RequestHandler):
+class SequenceInfoHandler(ManHandler):
     def get(self):
-        man = SequenceMan.get_instance()
-        self.write(man.get_state_json())
+        self.write(self.man.get_state_json())

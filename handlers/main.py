@@ -1,23 +1,24 @@
-import asyncio
-
-from tornado.web import RequestHandler
-
-from service.SequenceMan import SequenceMan
+from app.handler import ManHandler
 
 
-class MainHandler(RequestHandler):
+class MainHandler(ManHandler):
     def get(self):
-        man = SequenceMan.get_instance()
-        sequence_json = man.get_state_json()
+        self.render("../ui/dist/index.html")
+
+
+class TestPageHandler(ManHandler):
+    def get(self):
+        sequence_json = self.man.get_state_json()
         self.render("../template/index.html", state=sequence_json)
 
 
-# TODO: not as lazily as a global var. anyhow.
-global_stop_event = asyncio.Event()
+class ShutdownHandler(ManHandler):
+    def post(self):
+        print("Shutdown triggered via endpoint.")
+        self.application.shutdown_event.set()
 
 
-class ShutdownHandler(RequestHandler):
-    def get(self):
-        if global_stop_event.is_set():
-            return
-        global_stop_event.set()
+class FileStoreHandler(ManHandler):
+    def post(self):
+        filename = self.body().get("filename", "")
+        self.application.store_state(filename)

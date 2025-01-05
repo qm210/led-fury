@@ -1,31 +1,18 @@
 import asyncio
-import tornado
 
-from handlers.main import MainHandler, ShutdownHandler, global_stop_event
-from handlers.single import SingleHandler
-from handlers.sequence import StartSequenceHandler, StopSequenceHandler, SequenceInfoHandler
+from tornado.options import define, options
 
+from app.app import Application
 
-def make_app():
-    return tornado.web.Application(
-        [
-            (r"/", MainHandler),
-            (r"/single", SingleHandler),
-            (r"/start-sequence", StartSequenceHandler),
-            (r"/stop-sequence", StopSequenceHandler),
-            (r"/sequence", SequenceInfoHandler),
-            (r"/shutdown", ShutdownHandler),
-        ],
-        debug=True,
-        # xsrf_cookies=True,  # not needed yet...
-    )
+define('port', default=8888, help='run on the given port', type=int)
+define('file', default='./state.fury', help='load state file', type=str)
 
 
 async def main():
-    app = make_app()
-    app.listen(8888)
-    # tornado.ioloop.IOLoop.current().start() # <-- not async
-    await global_stop_event.wait()
+    app = Application(debug=True)
+    app.listen(options.port)
+    app.load_state(options.file)
+    await app.shutdown_event.wait()
 
 
 if __name__ == "__main__":

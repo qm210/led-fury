@@ -3,7 +3,6 @@ from itertools import chain
 from json import dumps
 from typing import Optional
 
-import numpy as np
 from tornado.ioloop import PeriodicCallback
 
 from logic.color import HsvColor
@@ -50,10 +49,6 @@ class SequenceMan:
             cls.instance = SequenceMan()
         return cls.instance
 
-    def __call__(self):
-        # todo: find out whether this actually makes sense / is needed
-        raise TypeError("The SequenceMan singleton needs to be accessed by get_instance()")
-
     def make_sender(self):
         return UdpSender(self.setup.host, self.setup.port)
 
@@ -77,6 +72,14 @@ class SequenceMan:
 
     def get_state_json(self):
         return dumps(self.get_state_dict(), default=str)
+
+    def init_state_from(self, store: dict):
+        state = store.get("state")
+        if state is not None:
+            pass
+        setup = store.get("setup")
+        if setup is not None:
+            pass
 
     def init_sample_pattern(self):
         self.state.patterns = [

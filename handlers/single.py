@@ -5,9 +5,12 @@ from service.SequenceMan import SequenceMan
 
 
 class SingleHandler(tornado.web.RequestHandler):
+    """
+        was a very first draft that is just kept here for reference
+    """
 
     def post(self):
-        man = SequenceMan.get_instance()
+        man = SequenceMan().get_instance()
         sender = man.make_sender()
         # Hyperion
         # sender.send([
