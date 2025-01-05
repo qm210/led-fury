@@ -98,4 +98,6 @@ class PointPattern:
                     p = boundary.min
                     m.sign = +1
 
+            pos[dim] = p
+
         self.pos = tuple(pos)

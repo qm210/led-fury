@@ -80,8 +80,6 @@ const SequencePreview = ({data}) => {
 const SegmentPreview = ({segment, maxLength, width, height, values}) => {
     const margin = 16;
     const size = (width - 2 * margin) / maxLength;
-    console.log("Segment Values", values);
-
     return Array(maxLength).fill(0).map((_, i) =>
         <PixelPreview
             index={i}
