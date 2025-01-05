@@ -1,7 +1,8 @@
 import {useComponentDimensions} from "../components/useComponentDimensions.jsx";
 import {useAllTheStuff, useSequence} from "../api/apiHooks.js";
 import {ControlButtons} from "../components/ControlButtons.jsx";
-import {Fragment, useCallback, useMemo} from "react";
+import {useEffect, useMemo, useState} from "react";
+import {useWebSocket} from "../api/useWebSocket.js";
 
 
 const EditorPage = () => {
@@ -68,7 +69,7 @@ const SequencePreview = ({data}) => {
                             width={width}
                             height={height}
                             key={index}
-                            values={current?.values}
+                            initialValues={current?.values}
                         />
                     )}
                 </svg>
@@ -77,7 +78,20 @@ const SequencePreview = ({data}) => {
     )
 };
 
-const SegmentPreview = ({segment, maxLength, width, height, values}) => {
+const SegmentPreview = ({segment, maxLength, width, height, initialValues}) => {
+    const {message} = useWebSocket();
+    const [values, setValues] = useState([]);
+
+    useEffect(() => {
+        setValues(initialValues)
+    }, [initialValues]);
+
+    useEffect(() => {
+        if (message?.values) {
+            setValues(message.values);
+        }
+    }, [message]);
+
     const margin = 16;
     const size = (width - 2 * margin) / maxLength;
     return Array(maxLength).fill(0).map((_, i) =>

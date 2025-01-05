@@ -1,10 +1,12 @@
 from dataclasses import asdict
+from datetime import datetime
 from itertools import chain
 from json import dumps
 from typing import Optional
 
 from tornado.ioloop import PeriodicCallback
 
+from handlers.websocket import WebSocketHandler
 from logic.color import HsvColor
 from logic.patterns import PointMotion, Boundary, BoundaryBehaviour
 from logic.patterns.pattern import Pattern, PatternType, PointPattern
@@ -150,31 +152,4 @@ class SequenceMan:
         self.state.proceed_and_render(self.run)
         self.run.update_times()
         self.sender.send_drgb(self.state.rgb_value_list, close=False)
-
-        # check whether patterns should spawn instances
-        # proceed each instance
-        # -> apply movement
-        # -> render colors
-        # render all colors together to self.state.pixels
-
-        # p_max = self.state.max_length - 1
-        # p = s.point
-        #
-        # p.pos += p.speed * p.speed_sign * delta_sec
-        # if p.pos >= p_max and p.speed_sign > 0:
-        #     p.pos = p_max
-        #     p.speed_sign = -1
-        # if p.pos <= 0 and p.speed_sign < 0:
-        #     p.pos = 0
-        #     p.speed_sign = +1
-        #
-        # for pixel in range(self.setup.led_count):
-        #     i = 3 * pixel
-        #     # fade the current color
-        #     for c in range(3):
-        #         self.state.leds[i+c] = int(p.fade * self.state.leds[i+c])
-        #     # apply new point at current position
-        #     if abs(pixel - p.pos) < p.width:
-        #         self.state.leds[i:i+3] = p.color
-        #
-        #
+        WebSocketHandler.send_message({"values": self.state.rgb_value_list})

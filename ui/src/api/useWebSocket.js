@@ -36,7 +36,7 @@ export const useWebSocket = () => {
             console.error("WebSocket Error", error);
         }
         socket.onmessage = (event) => {
-            console.log("WebSocket message", event);;
+            // console.log("WebSocket message", event);;
             wsMessage.value = JSON.parse(event.data);
         };
     }, []);

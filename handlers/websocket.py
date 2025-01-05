@@ -1,4 +1,8 @@
+from json import dumps
+
 import tornado.websocket
+
+from app.json import JsonEncoder
 
 
 class WebSocketHandler(tornado.websocket.WebSocketHandler):
@@ -16,7 +20,6 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
         self.write_message(message)
 
     @classmethod
-    def send_message(cls, message: str):
-        print("Send WS message", message)
+    def send_message(cls, message: str | dict):
         for client in cls.clients:
             client.write_message(message)
