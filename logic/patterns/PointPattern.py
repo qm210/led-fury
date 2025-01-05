@@ -1,7 +1,6 @@
 from copy import deepcopy
 from dataclasses import dataclass, field
-from json import dumps
-from typing import TYPE_CHECKING, List, Tuple
+from typing import TYPE_CHECKING, Tuple
 
 from logic.color import HsvColor, HsvColorArray
 from logic.patterns import PointMotion, BoundaryBehaviour, Boundary, MotionType
@@ -80,9 +79,10 @@ class PointPattern:
         if run.current_sec == 0:
             return
 
+        pos = list(self.pos)
         for dim in range(2 if state.is_2d else 1):
             m = self.motion[dim]
-            p = self.pos[dim] + m.vel * m.sign * run.delta_sec
+            p = pos[dim] + m.vel * m.sign * run.delta_sec
 
             boundary = self.boundary[dim]
             if boundary.behaviour is BoundaryBehaviour.Wrap:
@@ -98,4 +98,4 @@ class PointPattern:
                     p = boundary.min
                     m.sign = +1
 
-            self.pos[dim] = p
+        self.pos = tuple(pos)

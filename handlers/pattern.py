@@ -2,6 +2,7 @@ from app.handler import ManHandler
 
 
 class PatternsHandler(ManHandler):
+    # needed still? -> OverallStateHandler
     def get(self):
         self.write(self.man.state.patterns)
 

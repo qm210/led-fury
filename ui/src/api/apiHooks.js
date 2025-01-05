@@ -26,7 +26,8 @@ export const useSequence = (options = {}) => {
     }));
 
     return {
-        query,
+        current: query.data?.data,
+        readCurrent: query.refetch,
         start: start.mutateAsync,
         stop: stop.mutateAsync,
     };

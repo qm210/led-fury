@@ -20,7 +20,7 @@ class SequenceState:
     patterns: List[Pattern] = field(default_factory=list)
     selected_frame: Optional[int] = None
     selected_pos: List[Tuple[int, int]] = field(default_factory=list)
-    selected_pattern: Optional[int] = None
+    selected_pattern: Optional[str] = None
 
     # actually derived from the setup, but live here for now
     max_length: int = 0
@@ -40,6 +40,7 @@ class SequenceState:
         # these are auxliary quantities for intermediate calculation only
         self._pixel_indices = np.mgrid[0:self.max_length, 0:self.n_segments].reshape(2, -1).T
         self._rgb_array = self.new_rgb_array()
+        self._rgb_list = []
 
     def update_from(self, stored: dict):
         def read(attr: str, key: str = ""):
@@ -90,10 +91,11 @@ class SequenceState:
                         self._rgb_array[index + c] = mix * rgb[c] + (1 - mix) * self._rgb_array[index + c]
 
         self._rgb_array = np.clip(self._rgb_array, 0, 255).round()
+        self._rgb_list = self._rgb_array.astype(np.uint8).tolist()
 
     @property
     def rgb_value_list(self):
-        return self._rgb_array.astype(np.uint8).tolist()
+        return self._rgb_list
 
     @property
     def pixel_indices(self):

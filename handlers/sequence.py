@@ -14,5 +14,6 @@ class StopSequenceHandler(ManHandler):
 
 
 class SequenceInfoHandler(ManHandler):
+    # needed still? -> OverallStateHandler
     def get(self):
         self.write(self.man.get_state_json())

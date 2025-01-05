@@ -14,7 +14,6 @@ class ManHandler(tornado.web.RequestHandler):
         if result is not None and \
                 not isinstance(result, (str, int, float, bool, bytes)):
             result = json.dumps(result, cls=JsonEncoder)
-        print("WRITE", result)
         return super().write(result)
 
     def body(self):
