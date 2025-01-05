@@ -1,0 +1,28 @@
+{
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"dev": "vite",
+		"build": "vite build",
+		"build:watch": "vite build --watch",
+		"tailwind:watch": "npx tailwindcss -i src/styles/global.css -c tailwind.config.js -o ./src/styles/dist.css --watch",
+		"tailwind:build": "NODE_ENV=production npx tailwindcss -i src/styles/global.css -c tailwind.config.js --minify",
+		"preview": "vite preview"
+	},
+	"dependencies": {
+		"@preact-signals/query": "^2.1.1",
+		"@preact/signals": "^2.0.0",
+		"axios": "^1.7.9",
+		"lucide-preact": "^0.469.0",
+		"preact": "^10.20.0",
+		"preact-iso": "^2.8.1",
+		"react-loader-spinner": "^6.1.6"
+	},
+	"devDependencies": {
+		"@preact/preset-vite": "^2.8.2",
+		"autoprefixer": "^10.4.20",
+		"postcss": "^8.4.49",
+		"tailwindcss": "^3.4.17",
+		"vite": "^5.2.2"
+	}
+}

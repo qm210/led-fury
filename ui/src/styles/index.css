@@ -1,0 +1,93 @@
+:root {
+	font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+	line-height: 1.5;
+	font-weight: 400;
+
+	color: #222;
+	background-color: #ffffff;
+
+	font-synthesis: none;
+	text-rendering: optimizeLegibility;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	-webkit-text-size-adjust: 100%;
+}
+
+body {
+	margin: 0;
+}
+
+#app {
+	display: flex;
+	flex-direction: column;
+	min-height: 100vh;
+}
+
+header {
+	display: flex;
+	justify-content: stretch;
+	background-color: #673ab8;
+}
+
+header nav {
+	display: flex;
+	flex: 1;
+}
+
+header a {
+	color: #fff;
+	padding: 0.75rem;
+	text-decoration: none;
+}
+
+header a.active {
+	background-color: #0005;
+}
+
+header a:hover {
+	background-color: #0008;
+}
+
+header div {
+	padding: 0.75rem;
+	color: #fff;
+}
+
+main {
+	flex: auto;
+	display: flex;
+	align-items: center;
+	max-width: 1280px;
+	margin: 0 auto;
+	text-align: center;
+}
+
+@media (max-width: 639px) {
+	main {
+		margin: 2rem;
+	}
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		color: #ccc;
+		background-color: #1a1a1a;
+	}
+}
+
+.home {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	width: 100%;
+}
+
+button {
+	border: 1px solid grey;
+	border-radius: 0;
+	background-color: #9ca3af;
+}
+
+button:hover {
+	background-color: #dc00af66;
+}
