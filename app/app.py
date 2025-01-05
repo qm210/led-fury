@@ -3,7 +3,8 @@ import json
 
 import tornado
 
-from app.encoder import JsonEncoder
+from app.json import JsonEncoder
+
 from handlers.main import MainHandler, ShutdownHandler, TestPageHandler, FileStoreHandler
 from handlers.overall import OverallStateHandler
 from handlers.pattern import PatternsHandler, PatternHandler
@@ -51,8 +52,7 @@ class Application(tornado.web.Application):
         except Exception as exc:
             print("cannot load state", filename, str(exc))
             raise exc
-
-        self.man.init_state_from(stored)
+        self.man.init_from(stored)
 
     def store_state(self, filename=""):
         if filename == "":
@@ -62,4 +62,4 @@ class Application(tornado.web.Application):
             "setup": self.man.setup,
         }
         with open(filename, 'w') as f:
-            json.dump(store, f, cls=JsonEncoder)
+            json.dump(store, f, cls=JsonEncoder, indent=4)

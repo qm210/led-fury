@@ -28,6 +28,28 @@ class Pattern:
     fade: float = 0.95
     max_instances: int = 10
 
+    @classmethod
+    def from_json(cls, stored: dict):
+        type = PatternType(stored["type"])
+        if type == PatternType.Point:
+            template = PointPattern.from_json(stored["template"])
+        else:
+            raise TypeError(f"from_json() not yet implemented for \"{str(type)}\"")
+        result = cls(
+            type=type,
+            template=template,
+            id=stored["id"],
+            name=stored.get("name", stored["id"]),
+            start_sec=stored.get("start_sec", 0),
+            stop_sec=stored.get("stop_sec"),
+            respawn_sec=stored.get("respawn_sec"),
+        )
+        if stored.get("fade") is not None:
+            result.fade = stored["fade"]
+        if stored.get("max_instances") is not None:
+            result.max_instances = stored["max_instances"]
+        return result
+
     def proceed_step(self, run: "RunState", state: "SequenceState"):
         if run.elapsed_beyond(self.stop_sec):
             if run.pattern_instances[self.id]:

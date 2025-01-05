@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 
 
@@ -12,12 +12,18 @@ class BoundaryBehaviour(Enum):
 class Boundary:
     min: int = 0
     max: int = 0
-    behaviour: BoundaryBehaviour = BoundaryBehaviour.Unbounded
+    behaviour: BoundaryBehaviour = field(default=BoundaryBehaviour.Unbounded)
+
+
+# might grow later on
+class MotionType(Enum):
+    Linear = "linear"
 
 
 @dataclass
-class LinearMotion:
+class PointMotion:
     # velocity unit is amount of pixels per second
     vel: float = 0
     sign: int = +1
     acc: float = 0
+    type: MotionType = field(default=MotionType.Linear)

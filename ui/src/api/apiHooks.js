@@ -27,8 +27,8 @@ export const useSequence = (options = {}) => {
 
     return {
         query,
-        start,
-        stop
+        start: start.mutateAsync,
+        stop: stop.mutateAsync,
     };
 };
 

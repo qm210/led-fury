@@ -6,7 +6,7 @@ from typing import Optional
 from tornado.ioloop import PeriodicCallback
 
 from logic.color import HsvColor
-from logic.patterns import LinearMotion, Boundary, BoundaryBehaviour
+from logic.patterns import PointMotion, Boundary, BoundaryBehaviour
 from logic.patterns.pattern import Pattern, PatternType, PointPattern
 from model.state import SequenceState
 from model.setup import LedSegment, ControllerSetup
@@ -62,7 +62,7 @@ class SequenceMan:
             first_instance = None
             first_pattern = None
         return {
-            "running": self.run.process is not None,
+            "running": self.running,
             "current_sec": self.run.current_sec,
             "delta_sec": self.run.delta_sec,
             "first_instance": first_instance,
@@ -73,13 +73,17 @@ class SequenceMan:
     def get_state_json(self):
         return dumps(self.get_state_dict(), default=str)
 
-    def init_state_from(self, store: dict):
-        state = store.get("state")
-        if state is not None:
-            pass
-        setup = store.get("setup")
-        if setup is not None:
-            pass
+    def init_from(self, stored: dict):
+        if self.running:
+            raise RuntimeError("Cannot re-initialize when still running.")
+        stored_setup = stored.get("setup")
+        if stored_setup is not None:
+            self.setup.update_from(stored_setup)
+        stored_state = stored.get("state")
+        if stored_state is not None:
+            self.state = SequenceState(self.setup)
+            self.state.update_from(stored_state)
+            self.run = RunState()
 
     def init_sample_pattern(self):
         self.state.patterns = [
@@ -87,13 +91,13 @@ class SequenceMan:
                 name="Sample Point",
                 type=PatternType.Point,
                 template=PointPattern(
-                    pos=[0, 0],
-                    size=[1, 1],
-                    motion=[
-                        LinearMotion(15),
-                        LinearMotion()
-                    ],
-                    boundary=[
+                    pos=(0, 0),
+                    size=(1, 1),
+                    motion=(
+                        PointMotion(15),
+                        PointMotion()
+                    ),
+                    boundary=(
                         Boundary(
                             max=self.state.max_length - 1,
                             behaviour=BoundaryBehaviour.Bounce
@@ -102,7 +106,7 @@ class SequenceMan:
                             max=self.state.n_segments - 1,
                             behaviour=BoundaryBehaviour.Wrap,
                         )
-                    ],
+                    ),
                     color=HsvColor.RandomFull(),
                     hue_delta=360,
                 ),
@@ -115,15 +119,19 @@ class SequenceMan:
             for instance in self.run.pattern_instances[pattern.id]:
                 instance.instance.color.randomize_hue(delta=pattern.template.hue_delta)
 
+    @property
+    def running(self):
+        return self.run.process is not None
+
     def start_sample_sequence(self):
         self.shuffle_pattern_colors()
-        if self.run.process is not None:
+        if self.running:
             return
         self.init_sample_pattern()
         self.start_sequence()
 
     def start_sequence(self):
-        if self.run.process is not None:
+        if self.running:
             return
         self.sender = self.make_sender()
         self.run.init_times()
@@ -131,7 +139,7 @@ class SequenceMan:
         self.run.process.start()
 
     def stop_sequence(self):
-        if self.run.process is not None:
+        if self.running:
             self.run.process.stop()
         self.run = RunState()
         if self.sender is not None:

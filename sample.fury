@@ -1,0 +1,77 @@
+{
+    "state": {
+        "update_ms": 50,
+        "sequence_length": 10,
+        "sequence_loops": true,
+        "sequence_frames": 20,
+        "patterns": [
+            {
+                "template": {
+                    "pos": [
+                        0,
+                        0
+                    ],
+                    "size": [
+                        1,
+                        1
+                    ],
+                    "motion": [
+                        {
+                            "vel": 15,
+                            "sign": 1,
+                            "acc": 0
+                        },
+                        {
+                            "vel": 0,
+                            "sign": 1,
+                            "acc": 0
+                        }
+                    ],
+                    "boundary": [
+                        {
+                            "min": 0,
+                            "max": 65,
+                            "behaviour": "bounce"
+                        },
+                        {
+                            "min": 0,
+                            "max": 0,
+                            "behaviour": "wrap"
+                        }
+                    ],
+                    "color": {
+                        "h": 285,
+                        "s": 100,
+                        "v": 100
+                    },
+                    "hue_delta": 360
+                },
+                "type": "point",
+                "id": "20250105-021518",
+                "name": "Sample Point",
+                "start_sec": 0,
+                "stop_sec": null,
+                "respawn_sec": null,
+                "fade": 0.95,
+                "max_instances": 10
+            }
+        ],
+        "max_length": 66,
+        "n_segments": 1,
+        "n_pixels": 66,
+        "is_2d": false,
+        "selected_frame": null,
+        "selected_pos": [],
+        "selected_pattern": null
+    },
+    "setup": {
+        "host": "192.168.178.60",
+        "port": 65506,
+        "segments": [
+            {
+                "length": 66,
+                "start": 0
+            }
+        ]
+    }
+}

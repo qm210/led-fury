@@ -2,7 +2,7 @@ import json
 
 import tornado
 
-from app.encoder import JsonEncoder
+from app.json import JsonEncoder
 
 
 class ManHandler(tornado.web.RequestHandler):

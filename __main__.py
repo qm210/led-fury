@@ -5,7 +5,7 @@ from tornado.options import define, options
 from app.app import Application
 
 define('port', default=8888, help='run on the given port', type=int)
-define('file', default='./state.fury', help='load state file', type=str)
+define('file', default='./sample.fury', help='load from file', type=str)
 
 
 async def main():
