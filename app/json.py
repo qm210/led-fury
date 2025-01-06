@@ -9,8 +9,10 @@ class JsonEncoder(json.JSONEncoder):
             return obj.value
         if dataclasses.is_dataclass(obj):
             return dataclasses.asdict(obj)
-        else:
+        try:
             return super().default(obj)
+        except TypeError:
+            return str(obj)
 
 #
 # class JsonDecoder(json.JSONDecoder):

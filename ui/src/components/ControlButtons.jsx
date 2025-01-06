@@ -1,35 +1,42 @@
 import * as Lucide from "lucide-preact";
-import {useOverallMutations, useSequence} from "../api/apiHooks.js";
+import {useOverallMutations, usePatternApi, useSequenceApi} from "../api/apiHooks.js";
+import {patternEdits} from "./PatternEditor.jsx";
 
-export const ControlButtons = ({data}) => {
+
+export const ControlButtons = () => {
     const {storeToFile} = useOverallMutations();
-    const {start, stop, readCurrent} = useSequence();
+    const {start, stop, readCurrent} = useSequenceApi();
+    const {postPatternEdits} = usePatternApi();
 
     return (
-        <div className="flex flex-row gap-2 w-full justify-start">
-            <button
-                className="p-2"
-                onClick = {() => start()}
+        <div class="flex flex-row gap-2 w-full justify-start">
+            <button class="p-2"
+                onClick = {() =>
+                    postPatternEdits(patternEdits.value)
+                        .then(() => start())
+                }
+                title = {"Start Sequence"}
             >
                 <Lucide.Play/>
             </button>
-            <button
-                className="p-2"
+            <button class="p-2"
                 onClick = {() => stop()}
+                title = {"Stop Sequence"}
             >
                 <Lucide.Square/>
             </button>
-            <button
-                className="p-2"
+            <button class="p-2"
                 onClick = {() => readCurrent()}
-                title={"Refresh Pixel Colors"}
+                title = {"Refresh Pixel Colors"}
             >
                 <Lucide.ListRestart/>
             </button>
-            <div className="flex-1"/>
-            <button
-                className="p-2"
-                onClick={() => storeToFile("test.fury")}
+            <div class="flex-1"/>
+            <button class="p-2"
+                onClick = {() =>
+                    storeToFile("test.fury")
+                }
+                title = {"store pattern to file"}
             >
                 <Lucide.FileInput/>
             </button>

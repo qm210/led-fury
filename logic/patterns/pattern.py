@@ -38,12 +38,15 @@ class Pattern:
         result = cls(
             type=type,
             template=template,
-            id=stored["id"],
-            name=stored.get("name", stored["id"]),
             start_sec=stored.get("start_sec", 0),
             stop_sec=stored.get("stop_sec"),
             respawn_sec=stored.get("respawn_sec"),
         )
+        if stored.get("id") is not None:
+            result.id = stored["id"]
+            result.name = result.name or result.id
+        if stored.get("name") is not None:
+            result.name = stored["name"]
         if stored.get("fade") is not None:
             result.fade = stored["fade"]
         if stored.get("max_instances") is not None:

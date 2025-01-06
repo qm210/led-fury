@@ -6,6 +6,7 @@ from typing import Tuple, Self
 import numpy as np
 from numpy.typing import NDArray
 
+from logic.math import clamp
 
 hsv_dtype = np.dtype([
     ('hue', np.float64),
@@ -37,11 +38,25 @@ class HsvColor:
     def RandomFull(cls):
         return cls.Random(s=100, v=100)
 
-    def randomize_hue(self, delta=None):
-        if delta is None:
+    def randomize(self, h=None, s=0, v=0):
+        if h is None:
             self.h = randint(0, 360)
         else:
-            self.h = (self.h + randint(-delta, delta)) % 360
+            self.h += randint(-h, h)
+        if s < 0:
+            self.s += randint(s, 0)
+        elif s > 0:
+            self.s += randint(0, s)
+        if v < 0:
+            self.v += randint(v, 0)
+        elif v > 0:
+            self.v += randint(0, v)
+        self.sanitize()
+
+    def sanitize(self):
+        self.h = self.h % 360
+        self.s = clamp(self.s, 0, 100)
+        self.v = clamp(self.v, 0, 100)
 
     def scale_v(self, factor: float):
         self.v = factor * self.v
@@ -52,10 +67,6 @@ class HsvColor:
 
     def copy(self):
         return HsvColor(self.h, self.s, self.v)
-
-    def add(self, other: Self):
-        # naive mixing model: ... TODO ...
-        pass
 
     def to_rgb(self):
         r, g, b = hsv_to_rgb(self.h/360, self.s/100, self.v/100)

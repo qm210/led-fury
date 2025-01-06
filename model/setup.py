@@ -1,11 +1,22 @@
 from dataclasses import dataclass, field
-from typing import List
+from enum import Enum
+from typing import List, Optional
+
+
+class SegmentShape(Enum):
+    Linear = "linear"
+    Area = "area"
+    Star = "star"
 
 
 @dataclass
 class LedSegment:
     length: int
-    start: int = 0  # TODO: not supported yet
+    # TODO: these are all not supported yet
+    start: int = 0
+    alternating: bool = False
+    shape: SegmentShape = SegmentShape.Linear
+    divisions: int = 1
 
 
 @dataclass
@@ -18,7 +29,11 @@ class ControllerSetup:
         self.host = setup.get("host", self.host)
         self.port = setup.get("port", self.port)
         if setup.get("segments") is not None:
-            self.segments = [LedSegment(
-                length=segment["length"],
-                start=segment.get("start", 0),
-            ) for segment in setup["segments"]]
+            self.segments = []
+            for seg in setup["segments"]:
+                segment = LedSegment(length=seg["length"])
+                segment.start = seg.get("start", segment.start)
+                segment.alternating = seg.get("alternating", segment.alternating)
+                segment.shape = seg.get("shape", segment.shape)
+                segment.divisions = seg.get("divisions", segment.divisions)
+                self.segments.append(segment)

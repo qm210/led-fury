@@ -3,7 +3,7 @@ from app.handler import ManHandler
 
 class StartSequenceHandler(ManHandler):
     def post(self):
-        self.man.start_sample_sequence()
+        self.man.start_sequence()
         self.write(self.man.get_state_json())
 
 

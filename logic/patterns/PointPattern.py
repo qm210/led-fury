@@ -1,6 +1,6 @@
 from copy import deepcopy
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Tuple
+from typing import TYPE_CHECKING, Tuple, List
 
 from logic.color import HsvColor, HsvColorArray
 from logic.patterns import PointMotion, BoundaryBehaviour, Boundary, MotionType
@@ -12,35 +12,43 @@ if TYPE_CHECKING:
 
 @dataclass
 class PointPattern:
-    pos: Tuple[int, int] = field(default_factory=lambda: (0, 0))
-    size: Tuple[int, int] = field(default_factory=lambda: (1, 1))
-    motion: Tuple[PointMotion, PointMotion] = field(default_factory=lambda: (PointMotion(), PointMotion()))
-    boundary: Tuple[Boundary, Boundary] = field(default_factory=lambda: (Boundary(), Boundary()))
+    pos: List[int] = field(default_factory=lambda: [0, 0])
+    size: List[int] = field(default_factory=lambda: [1, 1])
+    motion: List[PointMotion] = field(default_factory=lambda: [PointMotion(), PointMotion()])
+    boundary: List[Boundary] = field(default_factory=lambda: [Boundary(), Boundary()])
     color: HsvColor = field(default_factory=HsvColor)
     hue_delta: int = 0
+    sat_delta: int = 0
+    val_delta: int = 0
 
     @classmethod
     def init_from(cls, template: "PointPattern"):
         color = deepcopy(template.color)
-        color.randomize_hue(template.hue_delta)
+        color.randomize(
+            h=template.hue_delta,
+            s=template.sat_delta,
+            v=template.val_delta,
+        )
         return cls(
             pos=template.pos,
             size=template.size,
             motion=deepcopy(template.motion),
             boundary=deepcopy(template.boundary),
             color=color,
-            hue_delta=template.hue_delta
+            hue_delta=template.hue_delta,
+            sat_delta=template.sat_delta,
+            val_delta=template.val_delta,
         )
 
     @classmethod
     def from_json(cls, stored: dict):
         result = cls()
         if stored.get("pos") is not None:
-            result.pos = tuple(stored["pos"])
+            result.pos = stored["pos"][:]
         if stored.get("size") is not None:
-            result.size = tuple(stored["size"])
+            result.size = stored["size"][:]
         if stored.get("motion") is not None:
-            result.motion = tuple([
+            result.motion = [
                 PointMotion(
                     vel=m["vel"],
                     sign=m["sign"],
@@ -48,16 +56,16 @@ class PointPattern:
                     type=m.get("type", MotionType.Linear)
                 )
                 for m in stored["motion"]
-            ])
+            ]
         if stored.get("boundary") is not None:
-            result.boundary = tuple([
+            result.boundary = [
                 Boundary(
                     min=b["min"],
                     max=b["max"],
                     behaviour=BoundaryBehaviour(b["behaviour"]),
                 )
                 for b in stored["boundary"]
-            ])
+            ]
         color = stored.get("color")
         if color is not None:
             result.color = HsvColor(
@@ -70,7 +78,7 @@ class PointPattern:
         return result
 
     def render(self, pixels: HsvColorArray, state: "SequenceState"):
-        for x, y in state._pixel_indices:
+        for x, y in state.pixel_indices:
             if abs(x - self.pos[0]) < self.size[0] \
                     and abs(y - self.pos[1]) < self.size[1]:
                 pixels[x, y] = self.color.copy()
@@ -79,10 +87,9 @@ class PointPattern:
         if run.current_sec == 0:
             return
 
-        pos = list(self.pos)
         for dim in range(2 if state.is_2d else 1):
             m = self.motion[dim]
-            p = pos[dim] + m.vel * m.sign * run.delta_sec
+            p = self.pos[dim] + m.vel * m.sign * run.delta_sec
 
             boundary = self.boundary[dim]
             if boundary.behaviour is BoundaryBehaviour.Wrap:
@@ -98,6 +105,4 @@ class PointPattern:
                     p = boundary.min
                     m.sign = +1
 
-            pos[dim] = p
-
-        self.pos = tuple(pos)
+            self.pos[dim] = p

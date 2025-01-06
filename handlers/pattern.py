@@ -7,11 +7,18 @@ class PatternsHandler(ManHandler):
         self.write(self.man.state.patterns)
 
 
+class PatternEditHandler(ManHandler):
+    def post(self):
+        edits = self.body()
+        self.man.apply_pattern_edits(edits)
+
+
 class PatternHandler(ManHandler):
     def get(self, id):
-        print("pattern id", id)
+        self.write(
+            self.man.get_pattern(id)
+        )
 
-    def post(self, id):
+    def post(self, _id):
         body = self.body()
-        print("pattern id", id)
-        self.write(self.man.state.patterns)
+        self.man.upsert_pattern(body)

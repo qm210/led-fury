@@ -14,4 +14,13 @@ export default defineConfig({
 			"@preact/signals-react": "@preact/signals",
 		},
 	},
+	build: {
+		minify: false
+	},
+	proxy: {
+		"/api": {
+			"target": "http://localhost:8888/api",
+			changeOrigin: true,
+		}
+	}
 });

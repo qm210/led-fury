@@ -93,13 +93,13 @@ class SequenceMan:
                 name="Sample Point",
                 type=PatternType.Point,
                 template=PointPattern(
-                    pos=(0, 0),
-                    size=(1, 1),
-                    motion=(
+                    pos=[0, 0],
+                    size=[1, 1],
+                    motion=[
                         PointMotion(15),
                         PointMotion()
-                    ),
-                    boundary=(
+                    ],
+                    boundary=[
                         Boundary(
                             max=self.state.max_length - 1,
                             behaviour=BoundaryBehaviour.Bounce
@@ -108,7 +108,7 @@ class SequenceMan:
                             max=self.state.n_segments - 1,
                             behaviour=BoundaryBehaviour.Wrap,
                         )
-                    ),
+                    ],
                     color=HsvColor.RandomFull(),
                     hue_delta=360,
                 ),
@@ -119,20 +119,18 @@ class SequenceMan:
     def shuffle_pattern_colors(self):
         for pattern in self.state.patterns:
             for instance in self.run.pattern_instances[pattern.id]:
-                instance.instance.color.randomize_hue(delta=pattern.template.hue_delta)
+                instance.instance.color.randomize(
+                    h=pattern.template.hue_delta,
+                    s=pattern.template.sat_delta,
+                    v=pattern.template.val_delta,
+                )
 
     @property
     def running(self):
         return self.run.process is not None
 
-    def start_sample_sequence(self):
-        self.shuffle_pattern_colors()
-        if self.running:
-            return
-        self.init_sample_pattern()
-        self.start_sequence()
-
     def start_sequence(self):
+        self.shuffle_pattern_colors()
         if self.running:
             return
         self.sender = self.make_sender()
@@ -153,3 +151,22 @@ class SequenceMan:
         self.run.update_times()
         self.sender.send_drgb(self.state.rgb_value_list, close=False)
         WebSocketHandler.send_message({"values": self.state.rgb_value_list})
+
+    def upsert_pattern(self, json: dict):
+        new_pattern = Pattern.from_json(json)
+        for p, pattern in enumerate(self.state.patterns):
+            if pattern.id == json.get("id"):
+                self.state.patterns[p] = new_pattern
+                break
+        else:
+            self.state.patterns.append(new_pattern)
+
+    def get_pattern(self, id: str) -> Optional[Pattern]:
+        return next((
+            pattern
+            for pattern in self.state.patterns
+            if pattern.id == id
+        ), None)
+
+    def apply_pattern_edits(self, edits):
+        pass

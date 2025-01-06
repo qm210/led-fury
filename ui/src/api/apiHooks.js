@@ -2,15 +2,28 @@ import {useMutation$, useQuery$} from "@preact-signals/query";
 import axios from "axios";
 
 
-export const useAllTheStuff = (options = {}) =>
+axios.interceptors.request.use(
+    config => {
+        config.url = "/api" + config.url;
+        return config;
+    }
+);
+
+export const useOverallState = (options = {}) =>
     useQuery$(() => ({
-        queryKey: ["overall-state"],
-        queryFn: () => axios.get("/overall-state"),
+        queryKey: ["overall/state"],
+        queryFn: () => axios.get("/overall/state"),
         ...options,
     }));
 
+export const useOverallRuns = (options = {}) =>
+    useQuery$(() => ({
+        queryKey: ["overall/run"],
+        queryFn: () => axios.get("/overall/run"),
+        ...options,
+    }));
 
-export const useSequence = (options = {}) => {
+export const useSequenceApi = (options = {}) => {
     const query = useQuery$(() => ({
         queryKey: ["sequence"],
         queryFn: () => axios.get("/sequence"),
@@ -33,18 +46,23 @@ export const useSequence = (options = {}) => {
     };
 };
 
-
-export const useGetPatterns = () =>
-    useQuery$(() => ({
+export const usePatternApi = () => {
+    const getAll = useQuery$(() => ({
         queryKey: ["patterns"],
         queryFn: () => axios.get("/patterns"),
     }));
 
-export const usePostPattern = () =>
-    useQuery$(() => ({
-        queryKey: ["patterns"],
-        queryFn: () => axios.get("/patterns"),
+    const postEdits = useMutation$(() => ({
+        mutationFn: (patternEdits) => axios.post(
+            `/pattern/edits`,
+            patternEdits
+        ),
     }));
+
+    return {
+        postPatternEdits: postEdits.mutateAsync
+    }
+};
 
 export const useOverallMutations = () => {
     const {mutateAsync: storeToFile} = useMutation$(() => ({

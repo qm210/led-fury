@@ -6,8 +6,8 @@ import tornado
 from app.json import JsonEncoder
 
 from handlers.main import MainHandler, ShutdownHandler, TestPageHandler, FileStoreHandler
-from handlers.overall import OverallStateHandler
-from handlers.pattern import PatternsHandler, PatternHandler
+from handlers.overall import OverallStateHandler, OverallRunHandler
+from handlers.pattern import PatternsHandler, PatternHandler, PatternEditHandler
 from handlers.single import SingleHandler
 from handlers.sequence import StartSequenceHandler, StopSequenceHandler, SequenceInfoHandler
 from handlers.websocket import WebSocketHandler
@@ -24,24 +24,28 @@ class Application(tornado.web.Application):
                     "path": "./ui/dist/assets"
                 }),
                 (r"/ws", WebSocketHandler),
-                (r"/shutdown", ShutdownHandler),
-                (r"/store", FileStoreHandler),
+                (r"/api/shutdown", ShutdownHandler),
+                (r"/api/store", FileStoreHandler),
 
-                (r"/overall-state", OverallStateHandler),
-                (r"/patterns", PatternsHandler),
-                (r"/pattern/([a-zA-Z0-9_-]+)", PatternHandler),
-                (r"/sequence/start", StartSequenceHandler),
-                (r"/sequence/stop", StopSequenceHandler),
-                (r"/sequence", SequenceInfoHandler),
+                (r"/api/overall/state", OverallStateHandler),
+                (r"/api/overall/run", OverallRunHandler),
 
-                (r"/test", TestPageHandler),
-                (r"/single", SingleHandler),
+                (r"/api/patterns", PatternsHandler),
+                (r"/api/pattern/edits", PatternEditHandler),
+                (r"/api/pattern/([a-zA-Z0-9_-]+)", PatternHandler),
+
+                (r"/api/sequence/start", StartSequenceHandler),
+                (r"/api/sequence/stop", StopSequenceHandler),
+                (r"/api/sequence", SequenceInfoHandler),
+
+                (r"/api/test", TestPageHandler),
+                (r"/api/single", SingleHandler),
             ],
-            # xsrf_cookies=True,  # not needed yet...
             **kwargs
         )
         self.man = SequenceMan.get_instance()
         self.shutdown_event = asyncio.Event()
+        self.recent_filename = ""
 
     def load_state(self, filename):
         try:
@@ -53,6 +57,7 @@ class Application(tornado.web.Application):
             print("cannot load state", filename, str(exc))
             raise exc
         self.man.init_from(stored)
+        self.recent_filename = filename
 
     def store_state(self, filename=""):
         if filename == "":
@@ -63,3 +68,4 @@ class Application(tornado.web.Application):
         }
         with open(filename, 'w') as f:
             json.dump(store, f, cls=JsonEncoder, indent=4)
+        self.recent_filename = filename

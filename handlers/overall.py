@@ -28,3 +28,8 @@ class OverallStateHandler(ManHandler):
             "selected": selected
         }
         self.write(result)
+
+
+class OverallRunHandler(ManHandler):
+    def get(self):
+        self.write(self.man.run.__dict__)

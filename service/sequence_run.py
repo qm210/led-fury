@@ -1,3 +1,4 @@
+import json
 from collections import defaultdict
 from dataclasses import dataclass, field
 from time import perf_counter
@@ -41,3 +42,6 @@ class RunState:
 
     def elapsed_beyond(self, stop_second: Optional[float]):
         return stop_second is not None and self.current_sec >= stop_second
+
+    def to_json(self):
+        return json.dumps(self.__dict__, default=str)
