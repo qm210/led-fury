@@ -23,7 +23,11 @@ class Application(tornado.web.Application):
                 (r"/assets/(.*)", tornado.web.StaticFileHandler, {
                     "path": "./ui/dist/assets"
                 }),
+                (r"/favicon.svg", tornado.web.StaticFileHandler, {
+                    "path": "./ui/dist/favicon.svg"
+                }),
                 (r"/ws", WebSocketHandler),
+
                 (r"/api/shutdown", ShutdownHandler),
                 (r"/api/store", FileStoreHandler),
 
@@ -41,6 +45,7 @@ class Application(tornado.web.Application):
                 (r"/api/test", TestPageHandler),
                 (r"/api/single", SingleHandler),
             ],
+            #static_path=os.path.join(os.path.dirname(__file__), "ui/dist/")
             **kwargs
         )
         self.man = SequenceMan.get_instance()

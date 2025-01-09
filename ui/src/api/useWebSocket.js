@@ -1,7 +1,7 @@
 import {useEffect} from "preact/hooks";
 import {useSignal} from "@preact/signals";
 
-const url = "ws://localhost:8888/ws";
+const websocketEndpoint = "ws://localhost:8888/ws";
 
 export const useWebSocket = () => {
     const ws = useSignal({
@@ -15,7 +15,7 @@ export const useWebSocket = () => {
             return;
         }
 
-        const socket = new WebSocket(url);
+        const socket = new WebSocket(websocketEndpoint);
         ws.value = {
             connection: null,
             pending: true,
@@ -45,6 +45,6 @@ export const useWebSocket = () => {
         socket: ws.value.connection,
         pending: ws.value.pending,
         message: wsMessage.value,
-        url,
+        url: ws.value.connection?.url,
     };
 };

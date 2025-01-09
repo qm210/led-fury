@@ -1,0 +1,1 @@
+export const DELTA = "\u0394";

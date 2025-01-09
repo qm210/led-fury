@@ -14,12 +14,14 @@
 	"dependencies": {
 		"@preact-signals/query": "^2.1.1",
 		"@preact/signals": "^2.0.0",
+		"@uiw/react-color": "^2.3.4",
 		"axios": "^1.7.9",
 		"lucide-preact": "^0.469.0",
 		"preact": "^10.20.0",
 		"preact-iso": "^2.8.1",
 		"rc-slider": "^11.1.8",
-		"react-loader-spinner": "^6.1.6"
+		"react-loader-spinner": "^6.1.6",
+		"react-tiny-popover": "^8.1.4"
 	},
 	"devDependencies": {
 		"@preact/preset-vite": "^2.8.2",

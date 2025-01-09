@@ -18,7 +18,6 @@ class OverallStateHandler(ManHandler):
                 "maxSegmentLength": state.max_length,
                 "numberSegments": state.n_segments,
                 "totalNumberPixels": state.n_pixels,
-                "is2d": state.is_2d,
             },
             "sequence": {
                 "length": state.sequence_length,

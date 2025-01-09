@@ -66,7 +66,7 @@ class Pattern:
 
         for p in run.pattern_instances[self.id]:
             self.apply_fade(p.pixels)
-            p.instance.proceed_motion(run, state)
+            p.instance.proceed_motion(run)
             p.instance.render(p.pixels, state)
 
     def spawn_instance(self, run: "RunState", state: "SequenceState"):

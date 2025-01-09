@@ -26,7 +26,6 @@ class SequenceState:
     max_length: int = 0
     n_segments: int = 0
     n_pixels: int = 0
-    is_2d: bool = False
 
     def __init__(self, setup: ControllerSetup):
         self.patterns = []
@@ -35,7 +34,6 @@ class SequenceState:
         self.max_length = max([seg.start + seg.length for seg in setup.segments])
         self.n_segments = len(setup.segments)
         self.n_pixels = sum([seg.length for seg in setup.segments])
-        self.is_2d = len(setup.segments) > 1
 
         # these are auxliary quantities for intermediate calculation only
         self._pixel_indices = np.mgrid[0:self.max_length, 0:self.n_segments].reshape(2, -1).T

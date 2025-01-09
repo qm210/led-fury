@@ -1,19 +1,48 @@
 import {useOverallRuns, useOverallState} from "../api/apiHooks.js";
-import {useState} from "react";
+import {useEffect, useState, useCallback} from "react";
+import {segmentEdits} from "../signals/segments.js";
+import {currentSetup, lastRetrievedSetup} from "../signals/setup.js";
+
 
 export const DebugConsole = () => {
     const {refetch: fetchOverall} = useOverallState({enabled: false});
     const {refetch: fetchRuns} = useOverallRuns({enabled: false});
     const [log, setLog] = useState("");
+    const [enabled, setEnabled] = useState({
+        segments: false
+    });
 
-    const updateLog = (r) => {
+    const asLog = (r) => {
         if (typeof r === "object") {
             const data = r.data?.data ?? r.data ?? r;
-            setLog(JSON.stringify(data, null, 2));
-        } else {
-            setLog(r);
+            return JSON.stringify(data, null, 2);
         }
-    }
+        return r;
+    };
+
+    const updateLog = (r) =>
+        setLog(asLog(r));
+
+    const logSegments = useCallback(() => {
+        console.log(
+            lastRetrievedSetup.value,
+            currentSetup.value,
+            segmentEdits.value
+        );
+        let log = "Current Setup:\n" +
+            asLog(currentSetup.value) + "\n\n" +
+            "Segment Edits:\n";
+        for (const edit of segmentEdits.value) {
+            log += JSON.stringify(edit, null, 2) + "\n";
+        }
+        setLog(log);
+    }, []);
+
+    useEffect(() => {
+        if (enabled.segments) {
+            logSegments();
+        }
+    }, [enabled.segments, currentSetup.value]);
 
     return (
         <div class="self-stretch p-2 flex flex-col"
@@ -40,6 +69,16 @@ export const DebugConsole = () => {
                 >
                     Runs
                 </span>
+                <span className={"link"}
+                      onClick={() => {
+                          logSegments();
+                          setEnabled(state => ({segments: !state.segments}));
+                      }}
+                      style={{color: enabled.segments ? "magenta" : undefined}}
+                >
+                    Segments
+                </span>
+
             </div>
             <textarea
                 class="flex-1 w-full font-mono resize-none border-2 border-gray-300 bg-zinc-100"

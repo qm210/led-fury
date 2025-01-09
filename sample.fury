@@ -59,7 +59,6 @@
         "max_length": 66,
         "n_segments": 1,
         "n_pixels": 66,
-        "is_2d": false,
         "selected_frame": null,
         "selected_pos": [],
         "selected_pattern": null

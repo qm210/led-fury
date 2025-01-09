@@ -10,6 +10,15 @@ class ManHandler(tornado.web.RequestHandler):
         super().__init__(*args, **kwargs)
         self.man = self.application.man
 
+    def set_default_headers(self):
+        origin = self.request.headers.get('Origin')
+        if origin and origin.startswith("http://localhost"):
+            self.set_header("Access-Control-Allow-Origin", origin)
+
+    def options(self):
+        self.set_status(204)
+        self.finish()
+
     def write(self, result):
         if result is not None and \
                 not isinstance(result, (str, int, float, bool, bytes)):

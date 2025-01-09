@@ -11,6 +11,8 @@
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
 	-webkit-text-size-adjust: 100%;
+
+	--hover-pink: #dc00af66;
 }
 
 body {
@@ -60,7 +62,6 @@ main {
 	height: 100%;
 	align-items: stretch;
 	justify-content: space-between;
-	margin: 0 auto;
 	text-align: center;
 }
 
@@ -89,8 +90,48 @@ button {
 	border-radius: 0;
 	background-color: #9ca3af;
 	cursor: pointer;
+	transition: 200ms ease-out;
 }
 
 button:hover {
-	background-color: #dc00af66;
+	background-color: var(--hover-pink);
+	transition: 0ms;
+}
+
+.flex-of-inputs {
+	display: flex;
+	justify-content: space-evenly;
+}
+
+.flex-of-inputs > div {
+	display: flex;
+	flex-direction: row;
+	gap: 0.5rem;
+	justify-content: center;
+	align-items: baseline;
+}
+
+.flex-of-inputs input {
+	min-width: 2rem;
+	border: 1px solid silver;
+	text-align: center;
+}
+
+.short-inputs input {
+	width: 2.5rem;
+}
+
+.react-tiny-popover-container {
+	z-index: 99;
+}
+
+select {
+	border-radius: 0;
+	padding: 2rem;
+	background: none;
+}
+
+select option {
+	border-radius: 0;
+	padding: 2rem;
 }

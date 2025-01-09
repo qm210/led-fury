@@ -1,21 +1,33 @@
-import {useComponentDimensions} from "./useComponentDimensions.jsx";
 import {useSequenceApi} from "../api/apiHooks.js";
 import {useWebSocket} from "../api/useWebSocket.js";
 import {useEffect, useMemo, useState} from "react";
+import {currentSetup} from "../signals/setup.js";
+import Loader from "../utils/Loader.jsx";
 
-export const LiveView = ({setup, info}) => {
+
+export const LiveView = () => {
     // TODO ... flexible sizing, somehow
-    const {ref, dimensions} = useComponentDimensions();
     const width = 1600;
     const height = 400;
 
     const {current} = useSequenceApi();
 
+    // replaces the prop, let's see whether all is fine and dandy now.
+    const setup = currentSetup.value;
+
+    if (!setup) {
+        return (
+            <LiveViewArea>
+                <div class={"flex justify-center items-center"}>
+                    <Loader/>
+                </div>
+            </LiveViewArea>
+        );
+    }
+
     return (
-        <div className="flex-1 w-full bg-gray-700 text-white"
-             ref={ref}
-        >
-            <div class={"w-full h-full"}>
+        <LiveViewArea>
+            <div className={"w-full h-full"}>
                 <svg
                     width={width}
                     height={height}
@@ -26,7 +38,7 @@ export const LiveView = ({setup, info}) => {
                     {setup.segments.map((segment, index) =>
                         <SegmentLiveView
                             segment={segment}
-                            maxLength={info.maxSegmentLength}
+                            maxLength={setup.derived.maxSegmentLength}
                             width={width}
                             height={height}
                             key={index}
@@ -35,9 +47,17 @@ export const LiveView = ({setup, info}) => {
                     )}
                 </svg>
             </div>
-        </div>
-    )
+        </LiveViewArea>
+    );
 };
+
+const LiveViewArea = ({children, ...props}) =>
+    <div className="flex-1 w-full bg-gray-700 text-white"
+         {...props}
+    >
+        {children}
+    </div>;
+
 
 const SegmentLiveView = ({segment, maxLength, width, height, initialValues}) => {
     const {message} = useWebSocket();
@@ -55,20 +75,23 @@ const SegmentLiveView = ({segment, maxLength, width, height, initialValues}) => 
 
     const margin = 16;
     const size = (width - 2 * margin) / maxLength;
-    return Array(maxLength).fill(0).map((_, i) =>
-        <Pixel
+    return Array(maxLength).fill(0)
+        .map((_, i) =>
+            <Pixel
             index={i}
-            x={margin + (i + 0.5) * size}
-            y={0.5 * (height - size)}
-            radius={0.5 * size}
-            segment={segment}
-            values={values}
-            key={i}
+             x={margin + (i + 0.5) * size}
+             y={0.5 * (height - size)}
+             radius={0.5 * size}
+             segment={segment}
+             values={values}
+             key={i}
         />
     );
 };
 
-const Pixel = ({segment, values, index, x, y, radius}) => {
+const Pixel = ({
+    segment, values, index, x, y, radius
+    }) => {
     const [hover, setHover] = useState(false);
 
     const color = useMemo(() => {

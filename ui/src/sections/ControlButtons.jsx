@@ -1,6 +1,7 @@
 import * as Lucide from "lucide-preact";
 import {useOverallMutations, usePatternApi, useSequenceApi} from "../api/apiHooks.js";
-import {patternEdits} from "./PatternEditor.jsx";
+
+import {patternEdits} from "../signals/pattern.js";
 
 
 export const ControlButtons = () => {

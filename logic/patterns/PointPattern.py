@@ -83,11 +83,11 @@ class PointPattern:
                     and abs(y - self.pos[1]) < self.size[1]:
                 pixels[x, y] = self.color.copy()
 
-    def proceed_motion(self, run: "RunState", state: "SequenceState"):
+    def proceed_motion(self, run: "RunState"):
         if run.current_sec == 0:
             return
 
-        for dim in range(2 if state.is_2d else 1):
+        for dim in range(2):
             m = self.motion[dim]
             p = self.pos[dim] + m.vel * m.sign * run.delta_sec
 

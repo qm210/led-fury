@@ -21,21 +21,28 @@ export function Header() {
 
 const WebsocketInfo = () => {
 	const ws = useWebSocket();
+	const props = ws.socket
+		? {
+			color: "#BD9",
+			text: "Socket connected."
+		} : {
+			color: "#FAA",
+			text: "Socket disconnected!"
+		};
+
 	return (
 		<div
 			title={ws.url}
-			onDblClick={() => console.log(ws)}
+			onClick={() => console.log(ws)}
 		>
 			{
 				ws.pending
 					? "..."
-					: ws.socket
-						? <span style={{color: "#BD9"}}>
-								Socket connected.
-							</span>
-						: <span style={{color: "#FAA"}}>
-								Socket disconnected.
-							</span>
+					: (
+						<span style={{color: props.color}}>
+							{props.text}
+						</span>
+					)
 			}
 		</div>
 	);

@@ -4,7 +4,10 @@ import axios from "axios";
 
 axios.interceptors.request.use(
     config => {
-        config.url = "/api" + config.url;
+        // makeshift proxy
+        if (config.url.startsWith("/")) {
+            config.url = "http://localhost:8888/api" + config.url;
+        }
         return config;
     }
 );

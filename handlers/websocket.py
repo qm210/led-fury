@@ -1,13 +1,13 @@
-from json import dumps
-
 import tornado.websocket
-
-from app.json import JsonEncoder
 
 
 class WebSocketHandler(tornado.websocket.WebSocketHandler):
 
     clients = set()
+
+    def check_origin(self, origin: str) -> bool:
+        legit = super().check_origin(origin)
+        return legit or origin.startswith("http://localhost")
 
     def open(self):
         WebSocketHandler.clients.add(self)
@@ -16,7 +16,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
         WebSocketHandler.clients.remove(self)
 
     def on_message(self, message):
-        print("WS message: ", message)
+        print("Websocket received: ", message)
         self.write_message(message)
 
     @classmethod

@@ -1,11 +1,11 @@
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import List, Optional
+from typing import List
 
 
 class SegmentShape(Enum):
     Linear = "linear"
-    Area = "area"
+    Rectangle = "rect"
     Star = "star"
 
 

@@ -17,10 +17,17 @@ export default defineConfig({
 	build: {
 		minify: false
 	},
-	proxy: {
-		"/api": {
-			"target": "http://localhost:8888/api",
-			changeOrigin: true,
+	server: {
+		proxy: {
+			"/api": {
+				target: "http://localhost:8888/api",
+				changeOrigin: true,
+			},
+			"/ws": {
+				target: "ws://localhost:8888",
+				ws: true,
+				rewriteWsOrigin: true,
+			}
 		}
 	}
 });
