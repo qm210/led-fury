@@ -3,6 +3,9 @@ import {EditRow} from "../components/EditRow.jsx";
 import {ColorVariationCell} from "./ColorChooseRows.jsx";
 import {hoveredPattern, patternEdits, selectedPattern} from "../signals/pattern.js";
 import {currentSetup} from "../signals/setup.js";
+import * as Lucide from "lucide-preact";
+import {ActionButtonRow} from "../components/ActionButtonRow.jsx";
+import {TRIANGLE_RIGHT} from "../utils/constants.jsx";
 
 
 export const PatternEditor = ({patterns, selectedPatternId}) => {
@@ -27,41 +30,83 @@ const EditPatterns = ({patterns}) => {
             <div>
                 Patterns
             </div>
-            <ul class="border-2 rounded-sm border-gray-300 cursor-not-allowed"
+            <div class="pattern-list border-2 rounded-sm border-gray-300 cursor-not-allowed mb-2"
                 style={{
-                    background: "#8883",
+                    backgroundColor: "#8883",
                     minHeight: 140,
                 }}
             >
                 {
-                    patterns.map((p) =>
-                        <li key={p.id}
-                            class={"cursor-pointer px-6"}
-                            onMouseEnter = {() => {
-                                hoveredPattern.value = p;
-                            }}
-                            onMouseLeave = {() => {
-                                hoveredPattern.value = null;
-                            }}
-                            style = {{
-                                backgroundColor:
-                                    hoveredPattern.value?.id === p.id ? "var(--hover-pink)" :
-                                    selectedPattern.value?.id === p.id ? "white" : undefined,
-                                fontWeight:
-                                    selectedPattern.value?.id === p.id ? "bold" : undefined,
-                                transition:
-                                    hoveredPattern.value?.id === p.id
-                                        ? "0ms"
-                                        : "background-color 200ms ease-out"
-                            }}
-                        >
-                            {p.name}
-                        </li>
+                    patterns.map(pattern =>
+                        <PatternListEntry
+                            key={pattern.id}
+                            pattern={pattern}
+                        />
                     )
                 }
-            </ul>
+                {
+                    patterns.length < 4 &&
+                    <>
+                        <div/>
+                        <div/>
+                    </>
+                }
+            </div>
+            <ActionButtonRow
+                actions={[{
+                    element: Lucide.CopyPlus,
+                    tooltip: `Copy Pattern "${selectedPattern.value?.name}"`,
+                    disabled: !selectedPattern.value
+                }, {
+                    element: Lucide.Trash2,
+                    tooltip: `Delete Pattern "${selectedPattern.value?.name}"`,
+                    disabled: !selectedPattern.value || patterns.length < 2,
+                    onClick: () => {
+                        alert("hey!");
+                    }
+                }]}
+            />
         </div>
     );
+};
+
+const PatternListEntry = ({pattern}) => {
+    const hovered = hoveredPattern.value?.id === pattern.id;
+    const selected = selectedPattern.value?.id === pattern.id;
+    console.log(pattern);
+
+    const style = {
+        backgroundColor:
+            hovered
+                ? "var(--hover-pink)"
+                : selected
+                    ? "white"
+                    : undefined,
+        fontWeight:
+            selected ? "bold" : undefined,
+        transition:
+            hovered
+                ? "0ms"
+                : "background-color 200ms ease-out"
+    };
+
+    return <>
+        <div style={style}>
+            {selected ? (TRIANGLE_RIGHT + " ") : ""}
+        </div>
+        <div
+            className={"cursor-pointer px-6"}
+            style={style}
+            onMouseEnter={() => {
+                hoveredPattern.value = pattern;
+            }}
+            onMouseLeave={() => {
+                hoveredPattern.value = null;
+            }}
+        >
+            {pattern.name}
+        </div>
+    </>;
 };
 
 const EditPattern = () => {
@@ -75,12 +120,17 @@ const EditPattern = () => {
         );
     }
 
-    const maxLength = currentSetup.value.derived.maxSegmentLength;
+    const maxLength = currentSetup.value?.derived?.maxSegmentLength;
+
+    if (!maxLength) {
+        // not loaded yet
+        return null;
+    }
 
     return (
         <div class="flex-1 flex flex-col">
             <div>
-                Selected Pattern: <b>{pattern.name}</b>
+                Selected Pattern <b>{TRIANGLE_RIGHT}{" "}{pattern.name}</b>
             </div>
             <table
                 class="w-full border-2 rounded-sm border-gray-300"
@@ -90,6 +140,7 @@ const EditPattern = () => {
                 {/* start_sec, stop_sec*/}
                 <tr>
                     <td>Type</td>
+                    <td/>
                     <td>{pattern.type}</td>
                     <td width={"30%"}>
                         <span class={"opacity-30 text-sm"}>
@@ -113,6 +164,7 @@ const EditPattern = () => {
                 <EditRow
                     label={"Start Position"}
                     editKey={"pos"}
+                    isVector
                     getDefault={(p, d) => p.template.pos[d]}
                     numeric={{
                         min: 0,
@@ -122,6 +174,7 @@ const EditPattern = () => {
                 <EditRow
                     label={"Start Velocity"}
                     editKey={"vel"}
+                    isVector
                     getDefault={(p, d) =>
                         p.template.motion[d].vel * p.template.motion[d].sign
                     }
@@ -132,6 +185,7 @@ const EditPattern = () => {
                 <EditRow
                     label={"Point Size"}
                     editKey={"size"}
+                    isVector
                     getDefault={(p, d) => p.template.size[d]}
                     numeric={{
                         min: 1,
@@ -151,20 +205,13 @@ const EditPattern = () => {
                     <td>
                         Color Randomness
                     </td>
+                    <td/>
                     <td colSpan={3}>
                         <ColorVariationCell/>
                     </td>
                 </tr>
                 </tbody>
             </table>
-            {/*<div class="flex flex-row pt-2">*/}
-            {/*    <button class="p-2"*/}
-            {/*        disabled={pattern === workingCopy}*/}
-            {/*        onClick = {() => postPattern(workingCopy)}*/}
-            {/*    >*/}
-            {/*        <Lucide.Check/>*/}
-            {/*    </button>*/}
-            {/*</div>*/}
         </div>
     );
 };

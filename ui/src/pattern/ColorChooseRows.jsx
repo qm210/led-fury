@@ -32,6 +32,7 @@ export const ColorChooseRow = ({editKey, header, currentValue, defaultValue}) =>
     return (
         <tr>
             {header}
+            <td/>
             <td>
                 <Popover
                     isOpen={popupOpen}

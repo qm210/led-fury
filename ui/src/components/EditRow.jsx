@@ -5,8 +5,8 @@ import {applyEdit, findEdit, selectedPattern} from "../signals/pattern.js";
 import {currentSetup} from "../signals/setup.js";
 
 
-export const EditRow = ({label, editKey, getDefault, numeric, color}) => {
-    const dimensions = currentSetup.value.derived.is1d ? 1 : 2;
+export const EditRow = ({label, editKey, getDefault, numeric, color, isVector}) => {
+    const dimensions = isVector && !currentSetup.value.derived.is1d ? 2 : 1;
     return Array(dimensions).fill(0).map((_, dim) =>
         <EditRowForDimension
             dimIndex={dim}
@@ -14,13 +14,15 @@ export const EditRow = ({label, editKey, getDefault, numeric, color}) => {
             editKey={[editKey, dim]}
             getDefault={getDefault}
             header={
-                dim === 0 &&
-                <td colSpan={dimensions}>
-                    {label}
-                </td>
+                dim === 0
+                    ? <td rowSpan={dimensions}>
+                        {label}
+                    </td>
+                    : null
             }
             numeric={numeric}
             color={color}
+            hideCoordinate={dimensions === 1}
         />
     );
 };
@@ -29,9 +31,11 @@ const defaultDisplayFunc = (x) =>
     typeof x === "object"
         ? JSON.stringify(x)
         : x;
-const EditRowForDimension = ({dimIndex, header, editKey, getDefault, numeric, color}) => {
+
+const EditRowForDimension = ({dimIndex, header, editKey, getDefault, numeric, color, hideCoordinate}) => {
     const defaultValue = getDefault(selectedPattern.value, dimIndex);
     const currentValue = findEdit(editKey)?.value ?? defaultValue;
+    const coordinate = hideCoordinate ? "" : (["X", "Y"][dimIndex]);
     const displayFunc = numeric?.display ?? defaultDisplayFunc;
 
     if (color) {
@@ -48,32 +52,31 @@ const EditRowForDimension = ({dimIndex, header, editKey, getDefault, numeric, co
     return (
         <tr>
             {header}
+            {
+                <td>{coordinate}</td>
+            }
             <td>
                 {displayFunc(defaultValue)}
             </td>
             <td>
                 {
-                    numeric
-                        ? (
-                            numeric.max
-                                ? <Slider
-                                    min={numeric.min ?? 0}
-                                    max={numeric.max}
-                                    step={numeric.step ?? 1}
-                                    value={currentValue * (numeric.scale ?? 1)}
-                                    onChange={value =>
-                                        applyEdit(editKey, value / (numeric.scale ?? 1))
-                                    }
-                                />
-                                : <DragNumberInput
-                                    value={currentValue}
-                                    onChange={(value) =>
-                                        applyEdit(editKey, value)
-                                    }
-                                    step={numeric.step}
-                                />
-                        )
-                        : null
+                    numeric.max
+                        ? <Slider
+                            min={numeric.min ?? 0}
+                            max={numeric.max}
+                            step={numeric.step ?? 1}
+                            value={currentValue * (numeric.scale ?? 1)}
+                            onChange={value =>
+                                applyEdit(editKey, value / (numeric.scale ?? 1))
+                            }
+                        />
+                        : <DragNumberInput
+                            value={currentValue}
+                            onChange={(value) =>
+                                applyEdit(editKey, value)
+                            }
+                            step={numeric.step}
+                        />
                 }
             </td>
             <td style={{

@@ -3,12 +3,15 @@ import {useWebSocket} from "../api/useWebSocket.js";
 import {useEffect, useMemo, useState} from "react";
 import {currentSetup} from "../signals/setup.js";
 import Loader from "../utils/Loader.jsx";
+import {calculatePixelPosition, calculatePixelPositions} from "./segmentShapes.js";
+import {useSignal} from "@preact/signals";
 
 
 export const LiveView = () => {
     // TODO ... flexible sizing, somehow
     const width = 1600;
     const height = 400;
+    const area = useSignal({x:0, y:0, width, height});
 
     const {current} = useSequenceApi();
 
@@ -25,13 +28,20 @@ export const LiveView = () => {
         );
     }
 
+    const viewbox = [
+        area.value.x - 0.05 * area.value.width,
+        area.value.y - 0.05 * area.value.height,
+        area.value.width * 1.1,
+        area.value.height * 1.1,
+    ].join(" ");
+
     return (
         <LiveViewArea>
             <div className={"w-full h-full"}>
                 <svg
                     width={width}
                     height={height}
-                    viewBox={`0 0 ${width} ${height}`}
+                    viewBox={viewbox}
                     preserveAspectRatio="xMidYMid"
                     pointerEvents="all"
                 >
@@ -39,8 +49,8 @@ export const LiveView = () => {
                         <SegmentLiveView
                             segment={segment}
                             maxLength={setup.derived.maxSegmentLength}
-                            width={width}
-                            height={height}
+                            totalNumber={setup.derived.totalNumberPixels}
+                            areaSignal={area}
                             key={index}
                             initialValues={current?.values}
                         />
@@ -59,7 +69,7 @@ const LiveViewArea = ({children, ...props}) =>
     </div>;
 
 
-const SegmentLiveView = ({segment, maxLength, width, height, initialValues}) => {
+const SegmentLiveView = ({segment, totalNumber, maxLength, areaSignal, initialValues}) => {
     const {message} = useWebSocket();
     const [values, setValues] = useState([]);
 
@@ -73,18 +83,33 @@ const SegmentLiveView = ({segment, maxLength, width, height, initialValues}) => 
         }
     }, [message]);
 
-    const margin = 16;
-    const size = (width - 2 * margin) / maxLength;
-    return Array(maxLength).fill(0)
-        .map((_, i) =>
-            <Pixel
-            index={i}
-             x={margin + (i + 0.5) * size}
-             y={0.5 * (height - size)}
-             radius={0.5 * size}
-             segment={segment}
-             values={values}
-             key={i}
+    const {coordinates, area} = useMemo(() =>
+        calculatePixelPositions(totalNumber, segment, 25)
+    , [totalNumber, segment]);
+
+    useEffect(() => {
+        areaSignal.value = {
+            x: area.minX,
+            y: area.minY,
+            width: area.width,
+            height: area.height,
+        };
+        if (!areaSignal.value.height) {
+            areaSignal.value.height = 20;
+        }
+    }, [area]);
+
+    const radius = 10;
+
+    return coordinates.map(c =>
+        <Pixel
+            index={c.index}
+            x={c.x - radius}
+            y={c.y - radius}
+            radius={radius}
+            segment={segment}
+            values={values}
+            key={c.index}
         />
     );
 };
@@ -122,9 +147,9 @@ const Pixel = ({
             />
             <text
                 fill={"white"}
-                fillOpacity={hover ? 1 : 0.5}
-                x={0}
-                y={2.1 * radius}
+                fillOpacity={hover ? 1 : 0.3}
+                x={0.5 * radius}
+                y={radius}
                 fontSize={11}
                 textAnchor={"middle"}
             >

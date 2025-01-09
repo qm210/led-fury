@@ -24,6 +24,7 @@ class ControllerSetup:
     host: str
     port: int
     segments: List[LedSegment] = field(default_factory=list)
+    id: str = field(default="unnamed_setup")
 
     def update_from(self, setup: dict):
         self.host = setup.get("host", self.host)

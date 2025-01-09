@@ -14,6 +14,12 @@ export const updateCurrentSetupFromEdits = () => {
         }
         if (key === "len") {
             setup.segments[segIndex].length = edit.value;
+        } else if (key === "shape") {
+            setup.segments[segIndex].shape = edit.value;
+        } else if (key === "alt") {
+            setup.segments[segIndex].alternating = edit.value;
+        } else if (key === "div") {
+            setup.segments[segIndex].divisions = edit.value;
         } else {
             console.warn("updateCurrentSetupFromEdits() can not yet handle", edit);
         }

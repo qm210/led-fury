@@ -1,7 +1,8 @@
 import {DragNumberInput} from "../components/DragNumberInput.jsx";
-import {currentSetup, lastRetrievedSetup, updateCurrentSetupFromEdits} from "../signals/setup.js";
-import {applySegmentEdit, segmentEdits} from "../signals/segments.js";
-import {useEffect} from "react";
+import {currentSetup, lastRetrievedSetup} from "../signals/setup.js";
+import {applySegmentEdit} from "../signals/segments.js";
+import {isNonlinear, SEGMENT_SHAPES} from "./segmentShapes.js";
+import {Checkbox} from "../components/Checkbox.jsx";
 
 const formatSegment = (segment) => {
     let result = `${segment.length} Pixels`;
@@ -10,36 +11,8 @@ const formatSegment = (segment) => {
     }
     return result;
 };
-const alternatingOption = {
-    label: "Alternate:",
-    type: "bool",
-    value: false
-};
 
 export const EditSegments = () => {
-
-    /*
-    const [options, setOptions] = useState();
-    const options = {
-        "rect": [
-            {
-                label: "Length",
-                type: "number",
-                value: 999
-            },
-            alternatingOption
-        ],
-        "area": [
-            {
-                label: "Spikes",
-                type: "number",
-                value: 8
-            },
-            alternatingOption
-        ]
-    };
-     */
-
     const setup = currentSetup.value;
 
     if (!setup) {
@@ -66,8 +39,8 @@ export const EditSegments = () => {
                 {
                     setup.segments.map((segment, index) =>
                         <EditSegmentRows
-                            setup={setup}
                             segment={segment}
+                            segments={setup.segments}
                             index={index}
                             key={index}
                         />
@@ -79,25 +52,19 @@ export const EditSegments = () => {
     );
 };
 
-const SEGMENT_SHAPES = [{
-    name: "Line",
-    value: "linear"
-}, {
-    name: "Rectangle",
-    value: "rect"
-}, {
-    name: "Star",
-    value: "star"
-}];
-
-const EditSegmentRows = ({setup, segment, index}) => {
+const EditSegmentRows = ({segment, index, segments}) => {
 
     const makeKey = (...args) => ["seg", index, ...args];
 
-    const onChangeSegmentShape = (segmentIndex) => (event) => {
-        const shape = event.target.value;
-        applySegmentEdit(makeKey("shape"), shape);
+    const onChangeSegmentShape = (event) => {
+        const newShape = event.target.value;
+        if (segment.shape === newShape) {
+            return;
+        }
+        applySegmentEdit(makeKey("shape"), newShape);
     };
+
+    const rowSpan = segments.length + segments.filter(isNonlinear).length;
 
     return <>
         <tr>
@@ -105,7 +72,7 @@ const EditSegmentRows = ({setup, segment, index}) => {
                 index === 0
                     ? (
                         <td
-                            rowSpan={setup.segments.length}
+                            rowSpan={rowSpan}
                             className={"align-top"}
                         >
                             LED Segments
@@ -126,8 +93,8 @@ const EditSegmentRows = ({setup, segment, index}) => {
             </td>
             <td>
                 <select
-                    defaultValue={"line"}
-                    onChange={onChangeSegmentShape(index)}
+                    value={segment.shape}
+                    onChange={onChangeSegmentShape}
                 >
                     {SEGMENT_SHAPES.map(kv =>
                         <option value={kv.value}>
@@ -137,5 +104,45 @@ const EditSegmentRows = ({setup, segment, index}) => {
                 </select>
             </td>
         </tr>
+        {
+            isNonlinear(segment) &&
+            <tr>
+                <td/>
+                <td colSpan={3}>
+                    <div class={"flex-of-inputs"}>
+                        <div>
+                            <div>
+                                Divisions:
+                            </div>
+                            <div>
+                                <input
+                                    type={"number"}
+                                    value={segment.divisions}
+                                    onChange={(event) => {
+                                        applySegmentEdit(makeKey("div"), +event.target.value);
+                                    }}
+                                    min={0}
+                                    style={{width: "4rem", textAlign: "center"}}
+                                />
+                            </div>
+                        </div>
+                        <div>
+                            <div>
+                                Alternating?
+                            </div>
+                            <div>
+                                <Checkbox
+                                    checked={segment.alternating}
+                                    onChange={checked =>
+                                        applySegmentEdit(makeKey("alt"), checked)
+                                    }
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        }
     </>;
 };
+

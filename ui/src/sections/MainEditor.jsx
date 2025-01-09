@@ -6,14 +6,17 @@ import {DebugConsole} from "./DebugConsole.jsx";
 import {lastRetrievedSetup, updateCurrentSetupFromEdits} from "../signals/setup.js";
 import {useEffect} from "preact/hooks";
 import {EditSegments} from "./EditSegments.jsx";
+import {loadSetupFromStorage, segmentEdits} from "../signals/segments.js";
 
 const EditorPage = () => {
     const query = useOverallState({suspense: true});
     const {patterns, selected, setup} = query.data.data;
 
     useEffect(() => {
-        lastRetrievedSetup.value = structuredClone(setup);
-        // segmentEdits.value = [];  // <-- ...want?
+        if (!loadSetupFromStorage(setup.id)) {
+            lastRetrievedSetup.value = structuredClone(setup);
+            segmentEdits.value = [];  // <-- ...want?
+        }
         updateCurrentSetupFromEdits();
     }, [setup]);
 
