@@ -1,36 +1,40 @@
 import {useEffect} from "preact/hooks";
-import {useSignal} from "@preact/signals";
+import {signal} from "@preact/signals";
 
 const websocketEndpoint = "ws://localhost:8888/ws";
 
+const ws = signal({
+    connection: null,
+    pending: false,
+});
+const wsMessage = signal(null);
+
 export const useWebSocket = () => {
-    const ws = useSignal({
-        connection: null,
-        pending: false,
-    });
-    const wsMessage = useSignal(null);
 
     useEffect(() => {
         if (ws.value.connection || ws.value.pending) {
             return;
         }
 
-        const socket = new WebSocket(websocketEndpoint);
+        console.log("Opening Websocket", ws.value);
         ws.value = {
             connection: null,
             pending: true,
         };
-        socket.onopen = () => {
+        const socket = new WebSocket(websocketEndpoint);
+        socket.onopen = (event) => {
             ws.value = {
                 connection: socket,
                 pending: false,
             };
+            console.info("Websocket Opened", new Date(), event)
         };
-        socket.onclose = () => {
+        socket.onclose = (event) => {
             ws.value = {
                 connection: null,
                 pending: false,
             };
+            console.info("Websocket Closed", new Date(), event)
         };
         socket.onerror = (error) => {
             console.error("WebSocket Error", error);

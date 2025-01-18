@@ -1,5 +1,7 @@
 import {useMutation$, useQuery$} from "@preact-signals/query";
 import axios from "axios";
+import {useEffect} from "preact/hooks";
+import {useState} from "react";
 
 
 axios.interceptors.request.use(
@@ -80,4 +82,52 @@ export const useOverallMutations = () => {
         storeToFile,
         shutdown
     };
-}
+};
+
+export const useGeometryApi = () => {
+    const getGeometry = useQuery$(() => ({
+        queryKey: ["geometry"],
+        queryFn: () => axios.get("/geometry"),
+    }));
+
+    const {mutateAsync: postSegments} = useMutation$(() => ({
+        mutationFn: (segment) => axios.post("/geometry", {segment})
+    }));
+
+    return {
+        getGeometry,
+        postSegments
+    };
+};
+
+export const useSegmentGeometry = (segments) => {
+    // useQuery$ / useMutation$ showed weird behaviour, so implement own.
+    // This does not use a "pending" because no need - it is a direct result of a segment change.
+
+    const [state, setState] = useState({
+        segments,
+        geometry: null,
+        error: null,
+    });
+
+    useEffect(() => {
+        if (!segments) {
+            return;
+        }
+        axios.post("/geometry", segments)
+            .then(res => {
+                console.log("Segments", segments, "-> Geometry", res.data ?? res);
+                setState({
+                    segments,
+                    geometry: res.data,
+                    error: null
+                });
+            }).catch(error =>
+            setState(state => ({
+                ...state,
+                error
+            })));
+    }, [segments]);
+
+    return state;
+};

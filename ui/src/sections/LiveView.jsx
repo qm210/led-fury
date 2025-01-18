@@ -1,24 +1,43 @@
-import {useSequenceApi} from "../api/apiHooks.js";
+import {useSegmentGeometry, useSequenceApi} from "../api/apiHooks.js";
 import {useWebSocket} from "../api/useWebSocket.js";
 import {useEffect, useMemo, useState} from "react";
 import {currentSetup} from "../signals/setup.js";
 import Loader from "../utils/Loader.jsx";
-import {calculatePixelPosition, calculatePixelPositions} from "./segmentShapes.js";
-import {useSignal} from "@preact/signals";
+import {signal} from "@preact/signals";
+import {debugFromOutside} from "./DebugConsole.jsx";
+
+
+const hover = signal({
+    segment: null,
+    pixel: null,
+});
+
+const setHover = (segment = null, index = null, color = null) => {
+    hover.value = {
+        segment,
+        pixel: {index, color}
+    };
+};
 
 
 export const LiveView = () => {
     // TODO ... flexible sizing, somehow
-    const width = 1600;
     const height = 400;
-    const area = useSignal({x:0, y:0, width, height});
 
     const {current} = useSequenceApi();
 
-    // replaces the prop, let's see whether all is fine and dandy now.
-    const setup = currentSetup.value;
+    const view = useSegmentGeometry(currentSetup.value?.segments);
 
-    if (!setup) {
+    useEffect(() => {
+        if (view.geometry) {
+            debugFromOutside.value = {
+                source: "Geometry",
+                content: view
+            };
+        }
+    }, [view.geometry]);
+
+    if (!view.geometry) {
         return (
             <LiveViewArea>
                 <div class={"flex justify-center items-center"}>
@@ -28,48 +47,82 @@ export const LiveView = () => {
         );
     }
 
-    const viewbox = [
-        area.value.x - 0.05 * area.value.width,
-        area.value.y - 0.05 * area.value.height,
-        area.value.width * 1.1,
-        area.value.height * 1.1,
-    ].join(" ");
+    const viewbox = useMemo(() => {
+        const rect = view.geometry.rect;
+        return [
+            rect.x - 1,
+            rect.y - 1,
+            rect.width + 1,
+            rect.height + 1,
+        ].join(" ");
+    }, [view.geometry.rect])
 
     return (
-        <LiveViewArea>
-            <div className={"w-full h-full"}>
-                <svg
-                    width={width}
-                    height={height}
-                    viewBox={viewbox}
-                    preserveAspectRatio="xMidYMid"
-                    pointerEvents="all"
-                >
-                    {setup.segments.map((segment, index) =>
-                        <SegmentLiveView
-                            segment={segment}
-                            maxLength={setup.derived.maxSegmentLength}
-                            totalNumber={setup.derived.totalNumberPixels}
-                            areaSignal={area}
-                            key={index}
-                            initialValues={current?.values}
-                        />
-                    )}
-                </svg>
-            </div>
+        <LiveViewArea style={{
+            minWidth: "66vw"
+        }}>
+            <svg
+                width={"100%"}
+                height={"50vh"}
+                viewBox={viewbox}
+                preserveAspectRatio="xMidYMid"
+                pointerEvents="all"
+            >
+                {view.segments.map((segment, index) =>
+                    <SegmentLiveView
+                        segment={segment}
+                        geometry={view.geometry}
+                        initialValues={current?.values}
+                        key={index}
+                    />
+                )}
+            </svg>
+            <HoverInfo
+                segments={view.segments}
+            />
         </LiveViewArea>
     );
 };
 
 const LiveViewArea = ({children, ...props}) =>
-    <div className="flex-1 w-full bg-gray-700 text-white"
+    <div className={"flex-1 w-full h-full bg-gray-700 text-white relative"}
          {...props}
     >
         {children}
     </div>;
 
 
-const SegmentLiveView = ({segment, totalNumber, maxLength, areaSignal, initialValues}) => {
+const HoverInfo = ({segments}) => {
+    const info = useMemo(() => {
+        if (!hover.value?.segment) {
+            return "";
+        }
+        let result = `Pixel ${hover.value.pixel.index + 1}`;
+        if (segments.length > 1) {
+            result = `Segment 0, ` + result;
+        }
+        return result;
+    }, [hover.value]);
+
+    if (!info) {
+        return null;
+    }
+
+    return (
+        <div className={"absolute right-0 bottom-0 p-4"}>
+             <span className={"p-2"}
+                   style={{
+                       backgroundColor: hover.value.pixel?.color ?? "magenta"
+                   }}
+             >
+                {info}
+             </span>
+        </div>
+    );
+};
+
+
+const SegmentLiveView = ({segment, geometry, initialValues}) => {
     const {message} = useWebSocket();
     const [values, setValues] = useState([]);
 
@@ -83,78 +136,82 @@ const SegmentLiveView = ({segment, totalNumber, maxLength, areaSignal, initialVa
         }
     }, [message]);
 
-    const {coordinates, area} = useMemo(() =>
-        calculatePixelPositions(totalNumber, segment, 25)
-    , [totalNumber, segment]);
-
-    useEffect(() => {
-        areaSignal.value = {
-            x: area.minX,
-            y: area.minY,
-            width: area.width,
-            height: area.height,
-        };
-        if (!areaSignal.value.height) {
-            areaSignal.value.height = 20;
+    return <>
+        {geometry.coordinates.map(c =>
+            <Pixel
+                pixel={c}
+                segment={segment}
+                values={values}
+                key={c.index}
+            />
+        )}
+        {
+            hover.value.pixel?.index !== undefined &&
+            <PixelLabel
+                pixel={geometry.coordinates[hover.value.pixel.index]}
+                isHovered
+            />
         }
-    }, [area]);
+    </>;
+};
 
-    const radius = 10;
-
-    return coordinates.map(c =>
-        <Pixel
-            index={c.index}
-            x={c.x - radius}
-            y={c.y - radius}
-            radius={radius}
-            segment={segment}
-            values={values}
-            key={c.index}
-        />
-    );
+const calculateCssColor = (index, segment, values) => {
+    if (index < segment.start || index > segment.start + segment.length) {
+        return "none";
+    }
+    if (!values || values.length === 0) {
+        return "black";
+    }
+    const rgb = values?.slice(3 * index, 3 * index + 3);
+    return `rgba(${rgb.join(',')},1)`;
 };
 
 const Pixel = ({
-    segment, values, index, x, y, radius
-    }) => {
-    const [hover, setHover] = useState(false);
+                   segment, values, pixel
+               }) => {
 
-    const color = useMemo(() => {
-        if (index < segment.start || index > segment.start + segment.length) {
-            return "none";
-        }
-        if (!values) {
-            return "black";
-        }
-        const rgb = values.slice(3 * index, 3 * index + 3);
-        return `rgba(${rgb.join(',')},1)`;
-    }, [segment, values, index]);
+    const color = calculateCssColor(pixel.index, segment, values);
 
     return (
         <g
-            transform={`translate(${x} ${y})`}
-            onMouseEnter={() => setHover(true)}
-            onMouseLeave={() => setHover(false)}
-            onClick={() => console.log(segment, values, index)}
+            onMouseEnter={() => setHover(segment, pixel.index, color)}
+            onMouseLeave={() => setHover()}
+            onClick={() => console.log(segment, values, pixel)}
             cursor="pointer"
         >
             <circle
-                cx={0}
-                cy={0}
-                r={radius}
+                cx={pixel.x}
+                cy={pixel.y}
+                r={0.5}
                 fill={color}
                 stroke="none"
             />
-            <text
-                fill={"white"}
-                fillOpacity={hover ? 1 : 0.3}
-                x={0.5 * radius}
-                y={radius}
-                fontSize={11}
-                textAnchor={"middle"}
-            >
-                {index + 1}
-            </text>
+            <PixelLabel
+                pixel={pixel}
+            />
         </g>
+    );
+};
+
+const PixelLabel = ({pixel, isHovered}) => {
+
+    if (!pixel) {
+        return null;
+    }
+
+    return (
+        <text
+            fill={"white"}
+            stroke={"grey"}
+            strokeWidth={0.03}
+            fillOpacity={isHovered ? 1 : 0.4}
+            strokeOpacity={isHovered ? 0.5 : 0}
+            x={pixel.x + 0.15}
+            y={pixel.y - 0.5 + 0.95}
+            fontSize={0.6}
+            textAnchor={"middle"}
+        >
+            {pixel.index + 1}
+        </text>
     );
 };

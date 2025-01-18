@@ -88,7 +88,7 @@ export const DragNumberInput = ({
             onKeyPress={onKeyPress}
             onMouseDown={startDrag}
             onDblClick={onDoubleClick}
-            onClick={e => e.target.select()}
+            onFocus={e => e.target.select()}
             class={"w-full cursor-ew-resize text-center"}
             style={{
                 border: "1px solid #ddd",
@@ -96,4 +96,4 @@ export const DragNumberInput = ({
             }}
         />
     )
-}
+};

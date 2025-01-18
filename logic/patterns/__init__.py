@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from enum import Enum
+from typing import Optional
 
 
 class BoundaryBehaviour(Enum):
@@ -11,8 +12,9 @@ class BoundaryBehaviour(Enum):
 @dataclass
 class Boundary:
     min: int = 0
-    max: int = 0
+    max: int = None
     behaviour: BoundaryBehaviour = field(default=BoundaryBehaviour.Unbounded)
+    resize_on_segment_change = True
 
 
 # might grow later on

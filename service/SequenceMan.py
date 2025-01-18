@@ -1,8 +1,9 @@
+from contextlib import contextmanager
 from dataclasses import asdict
 from datetime import datetime
 from itertools import chain
 from json import dumps
-from typing import Optional
+from typing import Optional, List
 
 from tornado.ioloop import PeriodicCallback
 
@@ -11,9 +12,9 @@ from logic.color import HsvColor
 from logic.patterns import PointMotion, Boundary, BoundaryBehaviour
 from logic.patterns.pattern import Pattern, PatternType, PointPattern
 from model.state import SequenceState
-from model.setup import LedSegment, ControllerSetup
+from model.setup import PixelSegment, ControllerSetup
 from service.UdpSender import UdpSender
-from service.sequence_run import RunState
+from service.RunState import RunState
 
 CONTROLLER_HOST = "192.168.178.60"  # is wled1.local (would that name work? we'll see later)
 CONTROLLER_PORT = 65506
@@ -39,7 +40,7 @@ class SequenceMan:
             host=CONTROLLER_HOST,
             port=CONTROLLER_PORT,
             segments=[
-                LedSegment(66)
+                PixelSegment(66)
             ]
         )
         self.state = SequenceState(self.setup)
@@ -54,7 +55,7 @@ class SequenceMan:
     def make_sender(self):
         return UdpSender(self.setup.host, self.setup.port)
 
-    def get_state_dict(self):
+    def get_state_json(self):
         try:
             instance_iterator = chain.from_iterable(self.run.pattern_instances.values())
             first_instance = next(instance_iterator)
@@ -72,9 +73,6 @@ class SequenceMan:
             "values": self.state.rgb_value_list
         }
 
-    def get_state_json(self):
-        return dumps(self.get_state_dict(), default=str)
-
     def init_from(self, stored: dict):
         if self.running:
             raise RuntimeError("Cannot re-initialize when still running.")
@@ -86,6 +84,7 @@ class SequenceMan:
             self.state = SequenceState(self.setup)
             self.state.update_from(stored_state)
             self.run = RunState()
+        self.apply_setup_change()
 
     def init_sample_pattern(self):
         self.state.patterns = [
@@ -116,18 +115,33 @@ class SequenceMan:
             )
         ]
 
-    def shuffle_pattern_colors(self):
+    def zipped_pattern_instances(self):
         for pattern in self.state.patterns:
             for instance in self.run.pattern_instances[pattern.id]:
-                instance.instance.color.randomize(
-                    h=pattern.template.hue_delta,
-                    s=pattern.template.sat_delta,
-                    v=pattern.template.val_delta,
-                )
+                yield pattern, instance.instance
+
+    def shuffle_pattern_colors(self):
+        # usage example of self.zipped_pattern_instances()
+        for pattern, instance in self.zipped_pattern_instances():
+            instance.color.randomize(
+                h=pattern.template.hue_delta,
+                s=pattern.template.sat_delta,
+                v=pattern.template.val_delta,
+            )
 
     @property
     def running(self):
         return self.run.process is not None
+
+    def run_sequence_step(self):
+        self.state.proceed_and_render(self.run)
+        self.run.update_times()
+        self.sender.send_drgb(self.state.rgb_value_list, close=False)
+        WebSocketHandler.send_message({"values": self.state.rgb_value_list})
+
+    def start_process(self):
+        self.run.process = PeriodicCallback(self.run_sequence_step, self.state.update_ms)
+        self.run.process.start()
 
     def start_sequence(self):
         self.shuffle_pattern_colors()
@@ -135,8 +149,7 @@ class SequenceMan:
             return
         self.sender = self.make_sender()
         self.run.init_times()
-        self.run.process = PeriodicCallback(self.run_sequence_step, self.state.update_ms)
-        self.run.process.start()
+        self.start_process()
 
     def stop_sequence(self):
         if self.running:
@@ -146,11 +159,20 @@ class SequenceMan:
             self.sender.close()
             self.sender = None
 
-    def run_sequence_step(self):
-        self.state.proceed_and_render(self.run)
-        self.run.update_times()
-        self.sender.send_drgb(self.state.rgb_value_list, close=False)
-        WebSocketHandler.send_message({"values": self.state.rgb_value_list})
+    @contextmanager
+    def sequence_paused_if_running(self):
+        was_running = self.running
+        if was_running:
+            self.run.process.stop()
+        yield
+        if was_running:
+            self.start_process()
+
+    def apply_setup_change(self, segments: Optional[List[PixelSegment]] = None):
+        with self.sequence_paused_if_running():
+            if segments is not None:
+                self.setup.segments = segments
+            self.state.apply_setup_change(self.setup)
 
     def upsert_pattern(self, json: dict):
         new_pattern = Pattern.from_json(json)
@@ -169,4 +191,6 @@ class SequenceMan:
         ), None)
 
     def apply_pattern_edits(self, edits):
+        if not edits:
+            return
         pass

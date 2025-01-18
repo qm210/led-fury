@@ -73,7 +73,6 @@ const EditPatterns = ({patterns}) => {
 const PatternListEntry = ({pattern}) => {
     const hovered = hoveredPattern.value?.id === pattern.id;
     const selected = selectedPattern.value?.id === pattern.id;
-    console.log(pattern);
 
     const style = {
         backgroundColor:
@@ -91,7 +90,7 @@ const PatternListEntry = ({pattern}) => {
     };
 
     return <>
-        <div style={style}>
+        <div style={style} class={"pl-2"}>
             {selected ? (TRIANGLE_RIGHT + " ") : ""}
         </div>
         <div
@@ -129,13 +128,12 @@ const EditPattern = () => {
 
     return (
         <div class="flex-1 flex flex-col">
-            <div>
-                Selected Pattern <b>{TRIANGLE_RIGHT}{" "}{pattern.name}</b>
-            </div>
-            <table
-                class="w-full border-2 rounded-sm border-gray-300"
-                onClick={() => console.log(pattern, patternEdits.value)}
+            <div
+                onClick = {() => console.log(pattern, patternEdits.value)}
             >
+                Selected Pattern: <b>{pattern.name}</b>
+            </div>
+            <table class="w-full border-2 rounded-sm border-gray-300">
                 <tbody>
                 {/* start_sec, stop_sec*/}
                 <tr>
@@ -203,9 +201,9 @@ const EditPattern = () => {
                 />
                 <tr>
                     <td>
-                        Color Randomness
+                        Color Spawn Variation
                     </td>
-                    <td/>
+                    <td colSpan={1}/>
                     <td colSpan={3}>
                         <ColorVariationCell/>
                     </td>

@@ -6,7 +6,7 @@ from typing import Optional, List
 
 from tornado.ioloop import PeriodicCallback
 
-from logic.patterns.pattern import PatternInstance
+from logic.patterns.instance import PatternInstance
 
 
 @dataclass

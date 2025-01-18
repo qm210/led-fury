@@ -4,9 +4,10 @@ from typing import List, Optional, Tuple
 import numpy as np
 
 from logic.color import HsvColor, HsvColorArray
+from logic.geometry.calculate import Geometry, GeometryMan
 from logic.patterns.pattern import Pattern
 from model.setup import ControllerSetup
-from service.sequence_run import RunState
+from service.RunState import RunState
 
 
 @dataclass
@@ -26,19 +27,35 @@ class SequenceState:
     max_length: int = 0
     n_segments: int = 0
     n_pixels: int = 0
+    geometry: Optional[Geometry] = None
 
     def __init__(self, setup: ControllerSetup):
         self.patterns = []
         self.selected_pos = []
+        self._pixel_indices = np.empty((0, 2), dtype=int)
+        self._rgb_array = np.empty(0, dtype=float)
+        self._rgb_list = []
+        self.apply_setup_change(setup)
+        pass
 
-        self.max_length = max([seg.start + seg.length for seg in setup.segments])
+    def apply_setup_change(self, setup: ControllerSetup):
+        self.max_length = max([seg.length for seg in setup.segments])
         self.n_segments = len(setup.segments)
         self.n_pixels = sum([seg.length for seg in setup.segments])
+        self.geometry = GeometryMan.calculate_geometry(setup.segments)
 
         # these are auxliary quantities for intermediate calculation only
         self._pixel_indices = np.mgrid[0:self.max_length, 0:self.n_segments].reshape(2, -1).T
         self._rgb_array = self.new_rgb_array()
         self._rgb_list = []
+
+        for pattern in self.patterns:
+            for dim in range(2):
+                boundary = pattern.template.boundary[dim]
+                if boundary.resize_on_segment_change:
+                    axis = self.geometry.area.get_axis(dim)
+                    boundary.min = axis.min
+                    boundary.max = axis.max
 
     def update_from(self, stored: dict):
         def read(attr: str, key: str = ""):
@@ -61,7 +78,6 @@ class SequenceState:
             ]
 
     def new_pixel_array(self) -> HsvColorArray:
-        # TODO: does not support segment.start != 0 yet -> all lines need to have the same length!
         w = self.max_length
         h = self.n_segments
         array = np.empty((w, h), dtype=object)

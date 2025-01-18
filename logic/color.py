@@ -60,7 +60,7 @@ class HsvColor:
 
     def scale_v(self, factor: float):
         self.v = factor * self.v
-        if self.v < 1:
+        if self.v < 0:
             self.v = 0
         if self.v > 100:
             self.v = 100

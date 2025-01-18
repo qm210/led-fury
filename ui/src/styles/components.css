@@ -1,0 +1,69 @@
+
+.pattern-list {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: min-content;
+    grid-auto-flow: dense;
+}
+
+.number-input-spinner {
+    display: flex;
+    flex-direction: row;
+}
+
+.number-input-spinner > button {
+    border: none;
+    border-radius: 0;
+    padding: 0 1rem;
+    background-color: silver;
+}
+
+.number-input-spinner > button:hover {
+    background-color: #ccc;
+}
+
+.number-input-spinner > button:disabled {
+    background-color: #ddd;
+    color: #888;
+}
+
+.number-input-spinner > input {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+
+    width: 6rem;
+    outline: 0;
+    padding-left: 0.9rem;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+}
+
+.number-input-spinner > input[type=number]::-webkit-inner-spin-button {
+    opacity: 1;
+    width: 0;
+    height: 0;
+}
+
+.rc-slider .rc-slider-track {
+    background-color: grey;
+}
+
+.rc-slider .rc-slider-handle {
+    border: 3px solid grey;
+    background-color: grey;
+    opacity: 1;
+}
+
+tr.segment-row > td {
+    text-align: left;
+}
+
+tr.segment-row > td:first-of-type {
+    padding: 0.25rem;
+}
+
+tr.segment-row:not(.details) > td {
+    padding-top: 0.25rem;
+}

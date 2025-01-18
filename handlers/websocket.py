@@ -21,5 +21,8 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 
     @classmethod
     def send_message(cls, message: str | dict):
-        for client in cls.clients:
-            client.write_message(message)
+        try:
+            for client in cls.clients:
+                client.write_message(message)
+        except Exception as e:
+            tornado.log.gen_log.warning(f"Websocket cannot send \"{message}\": {str(e)}")

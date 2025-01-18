@@ -1,13 +1,12 @@
 from copy import deepcopy
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Tuple, List
+from typing import List, TYPE_CHECKING
 
-from logic.color import HsvColor, HsvColorArray
+from logic.color import HsvColor
 from logic.patterns import PointMotion, BoundaryBehaviour, Boundary, MotionType
 
 if TYPE_CHECKING:
-    from model.state import SequenceState
-    from service.sequence_run import RunState
+    from service.RunState import RunState
 
 
 @dataclass
@@ -20,25 +19,6 @@ class PointPattern:
     hue_delta: int = 0
     sat_delta: int = 0
     val_delta: int = 0
-
-    @classmethod
-    def init_from(cls, template: "PointPattern"):
-        color = deepcopy(template.color)
-        color.randomize(
-            h=template.hue_delta,
-            s=template.sat_delta,
-            v=template.val_delta,
-        )
-        return cls(
-            pos=template.pos,
-            size=template.size,
-            motion=deepcopy(template.motion),
-            boundary=deepcopy(template.boundary),
-            color=color,
-            hue_delta=template.hue_delta,
-            sat_delta=template.sat_delta,
-            val_delta=template.val_delta,
-        )
 
     @classmethod
     def from_json(cls, stored: dict):
@@ -77,21 +57,47 @@ class PointPattern:
             result.hue_delta = stored["hue_delta"]
         return result
 
-    def render(self, pixels: HsvColorArray, state: "SequenceState"):
-        for x, y in state.pixel_indices:
-            if abs(x - self.pos[0]) < self.size[0] \
-                    and abs(y - self.pos[1]) < self.size[1]:
-                pixels[x, y] = self.color.copy()
 
-    def proceed_motion(self, run: "RunState"):
+@dataclass
+class PointPatternState:
+    pos: List[float]
+    vel: List[float]
+    acc: List[float]
+    size: List[float]
+    color: HsvColor
+
+    @classmethod
+    def init_from(cls, template: "PointPattern"):
+        color = deepcopy(template.color)
+        color.randomize(
+            h=template.hue_delta,
+            s=template.sat_delta,
+            v=template.val_delta,
+        )
+        return cls(
+            pos=deepcopy(template.pos),
+            size=deepcopy(template.size),
+            vel=[
+                m.vel * m.sign
+                for m in template.motion
+            ],
+            acc=[
+                m.acc
+                for m in template.motion
+            ],
+            color=color,
+        )
+
+    def proceed(self, run: "RunState", template: "PointPattern"):
         if run.current_sec == 0:
             return
 
-        for dim in range(2):
-            m = self.motion[dim]
+        # should all be 2D by now
+        for dim in range(len(self.pos)):
+            m = template.motion[dim]
             p = self.pos[dim] + m.vel * m.sign * run.delta_sec
 
-            boundary = self.boundary[dim]
+            boundary = template.boundary[dim]
             if boundary.behaviour is BoundaryBehaviour.Wrap:
                 if p > boundary.max:
                     p = boundary.min

@@ -18,9 +18,10 @@ export const Checkbox = ({checked, onChange}) => {
                 height: "1.5rem",
                 cursor: "pointer",
                 fontSize: "large",
-                padding: 0,
+                padding: "0.25rem",
                 userSelect: "none",
                 outline: 0,
+                border: "1px solid silver"
             }}
         />
     );

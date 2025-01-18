@@ -2,7 +2,12 @@ import {useOverallRuns, useOverallState} from "../api/apiHooks.js";
 import {useEffect, useState, useCallback} from "react";
 import {segmentEdits} from "../signals/segments.js";
 import {currentSetup, lastRetrievedSetup} from "../signals/setup.js";
+import {signal} from "@preact/signals";
 
+export const debugFromOutside = signal({
+    source: null,
+    content: {}
+});
 
 export const DebugConsole = () => {
     const {refetch: fetchOverall} = useOverallState({enabled: false});
@@ -44,6 +49,18 @@ export const DebugConsole = () => {
         }
     }, [enabled.segments, currentSetup.value]);
 
+    useEffect(() => {
+        if (debugFromOutside.value) {
+            setLog(
+                JSON.stringify(
+                    debugFromOutside.value.content,
+                    null,
+                    2
+                )
+            );
+        }
+    }, [debugFromOutside.value]);
+
     return (
         <div class="self-stretch p-2 flex flex-col"
              style={{
@@ -78,6 +95,12 @@ export const DebugConsole = () => {
                 >
                     Segments
                 </span>
+                {
+                    debugFromOutside.value &&
+                    <span className={"text-red-800 font-bold"}>
+                        {debugFromOutside.value.source}
+                    </span>
+                }
 
             </div>
             <textarea

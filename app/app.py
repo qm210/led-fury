@@ -4,6 +4,7 @@ import json
 import tornado
 
 from app.json import JsonEncoder
+from handlers.geometry import GeometryHandler
 
 from handlers.main import MainHandler, ShutdownHandler, TestPageHandler, FileStoreHandler
 from handlers.overall import OverallStateHandler, OverallRunHandler
@@ -42,10 +43,12 @@ class Application(tornado.web.Application):
                 (r"/api/sequence/stop", StopSequenceHandler),
                 (r"/api/sequence", SequenceInfoHandler),
 
+                (r"/api/geometry", GeometryHandler),
+
                 (r"/api/test", TestPageHandler),
                 (r"/api/single", SingleHandler),
             ],
-            #static_path=os.path.join(os.path.dirname(__file__), "ui/dist/")
+            # static_path=os.path.join(os.path.dirname(__file__), "ui/dist/")
             **kwargs
         )
         self.man = SequenceMan.get_instance()

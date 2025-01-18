@@ -3,14 +3,7 @@ import {currentSetup, lastRetrievedSetup} from "../signals/setup.js";
 import {applySegmentEdit} from "../signals/segments.js";
 import {isNonlinear, SEGMENT_SHAPES} from "./segmentShapes.js";
 import {Checkbox} from "../components/Checkbox.jsx";
-
-const formatSegment = (segment) => {
-    let result = `${segment.length} Pixels`;
-    if (segment.start > 0) {
-        result += ` from Index ${segment.start}`
-    }
-    return result;
-};
+import {SpinNumberInput} from "../components/SpinNumberInput.jsx";
 
 export const EditSegments = () => {
     const setup = currentSetup.value;
@@ -32,7 +25,7 @@ export const EditSegments = () => {
                     <td>
                         WLED Host
                     </td>
-                    <td>
+                    <td colSpan={2}>
                         {setup.host}{"\u2009:\u2009"}{setup.port}
                     </td>
                 </tr>
@@ -67,7 +60,7 @@ const EditSegmentRows = ({segment, index, segments}) => {
     const rowSpan = segments.length + segments.filter(isNonlinear).length;
 
     return <>
-        <tr>
+        <tr class={"segment-row"}>
             {
                 index === 0
                     ? (
@@ -79,13 +72,17 @@ const EditSegmentRows = ({segment, index, segments}) => {
                         </td>
                     ) : <td/>
             }
-            <td>{formatSegment(segment)}</td>
             <td>
-                <DragNumberInput
+                Pixels:
+            </td>
+            <td>
+                <SpinNumberInput
                     value={segment.length}
+                    onChange={(value) =>
+                        applySegmentEdit(makeKey("len"), value)
+                    }
                     min={1}
                     resetValue={lastRetrievedSetup.value.segments[index].length}
-                    onChange={(value) => applySegmentEdit(makeKey("len"), value)}
                 />
             </td>
             <td>
@@ -105,41 +102,32 @@ const EditSegmentRows = ({segment, index, segments}) => {
             </td>
         </tr>
         {
-            isNonlinear(segment) &&
-            <tr>
-                <td/>
-                <td colSpan={3}>
-                    <div class={"flex-of-inputs"}>
-                        <div>
-                            <div>
-                                Divisions:
-                            </div>
-                            <div>
-                                <input
-                                    type={"number"}
-                                    value={segment.divisions}
-                                    onChange={(event) => {
-                                        applySegmentEdit(makeKey("div"), +event.target.value);
-                                    }}
-                                    min={0}
-                                    style={{width: "4rem", textAlign: "center"}}
-                                />
-                            </div>
-                        </div>
-                        <div>
-                            <div>
-                                Alternating?
-                            </div>
-                            <div>
-                                <Checkbox
-                                    checked={segment.alternating}
-                                    onChange={checked =>
-                                        applySegmentEdit(makeKey("alt"), checked)
-                                    }
-                                />
-                            </div>
-                        </div>
+        isNonlinear(segment) &&
+            <tr className={"segment-row details"}>
+                <td>
+                    Divisions:
+                </td>
+                <td>
+                    <div>
+                        <SpinNumberInput
+                            value={segment.divisions}
+                            onChange={(value) => {
+                                applySegmentEdit(makeKey("div"), value);
+                            }}
+                            min={1}
+                        />
                     </div>
+                </td>
+                <td>
+                    Alternating?
+                </td>
+                <td style={{textAlign: "left"}}>
+                    <Checkbox
+                        checked={segment.alternating}
+                        onChange={checked =>
+                            applySegmentEdit(makeKey("alt"), checked)
+                        }
+                    />
                 </td>
             </tr>
         }

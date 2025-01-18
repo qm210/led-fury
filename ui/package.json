@@ -6,7 +6,8 @@
 		"dev:watch": "concurrently \"npm run tailwind:watch\" \"vite\"",
 		"tailwind:watch": "npx tailwindcss -i src/styles/global.css -c tailwind.config.js -o ./src/styles/dist.css --watch",
 		"tailwind": "npx tailwindcss -i src/styles/global.css -c tailwind.config.js -o ./src/styles/dist.css",
-		"tailwind:build": "NODE_ENV=production npx tailwindcss -i src/styles/global.css -c tailwind.config.js --minify",
+		"tailwind:build": "set NODE_ENV=production && npx tailwindcss -i src/styles/global.css -c tailwind.config.js --minify",
+		"tailwind:build-linux": "NODE_ENV=production npx tailwindcss -i src/styles/global.css -c tailwind.config.js --minify",
 		"build": "vite build",
 		"build:watch": "concurrently \"npm run tailwind:watch\" \"vite build --watch\"",
 		"preview": "vite preview"

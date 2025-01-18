@@ -22,12 +22,7 @@ const EditorPage = () => {
 
     return <>
         <div class="flex-1 flex flex-row justify-center self-center">
-            <div class="flex flex-col gap-2 bg-slate-50"
-                 style={{
-                     maxWidth: 2000,
-                     minHeight: "5vh"
-                 }}
-            >
+            <div class="flex flex-col gap-2 bg-slate-50">
                 <LiveView/>
                 <ControlButtons/>
                 <div className="flex flex-row gap-2 w-full justify-stretch items-stretch">

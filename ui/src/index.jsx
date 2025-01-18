@@ -10,6 +10,7 @@ import Loader from "./utils/Loader.jsx";
 import {Suspense} from "react";
 
 import './styles/index.css';
+import './styles/components.css';
 import './styles/dist.css'; // tailwind build, generate via "npm run tailwind:build"
 import 'rc-slider/assets/index.css';
 
