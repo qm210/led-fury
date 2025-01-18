@@ -3,10 +3,17 @@ import {DragNumberInput} from "./DragNumberInput.jsx";
 import {ColorChooseRow} from "../pattern/ColorChooseRows.jsx";
 import {applyEdit, findEdit, selectedPattern} from "../signals/pattern.js";
 import {currentSetup} from "../signals/setup.js";
+import {OptionSelector} from "./OptionSelector.js";
 
 
-export const EditRow = ({label, editKey, getDefault, numeric, color, isVector}) => {
+export const EditRow = ({label, editKey, getDefault, numeric, numericY, color, select, isVector, onClickHeader}) => {
     const dimensions = isVector && !currentSetup.value.derived.is1d ? 2 : 1;
+
+    const onClickHeaderCell =
+        onClickHeader === undefined
+            ? undefined
+            : () => onClickHeader(selectedPattern.value);
+
     return Array(dimensions).fill(0).map((_, dim) =>
         <EditRowForDimension
             dimIndex={dim}
@@ -15,13 +22,21 @@ export const EditRow = ({label, editKey, getDefault, numeric, color, isVector}) 
             getDefault={getDefault}
             header={
                 dim === 0
-                    ? <td rowSpan={dimensions}>
+                    ? <td
+                        rowSpan={dimensions}
+                        onClick={onClickHeaderCell}
+                    >
                         {label}
                     </td>
                     : null
             }
-            numeric={numeric}
+            numeric={
+                numericY !== undefined && dim === 1
+                ? numericY
+                : numeric
+            }
             color={color}
+            select={select}
             hideCoordinate={dimensions === 1}
         />
     );
@@ -30,9 +45,11 @@ export const EditRow = ({label, editKey, getDefault, numeric, color, isVector}) 
 const defaultDisplayFunc = (x) =>
     typeof x === "object"
         ? JSON.stringify(x)
-        : x;
+        : typeof x === "number"
+            ? +(x.toFixed(3))
+            : x;
 
-const EditRowForDimension = ({dimIndex, header, editKey, getDefault, numeric, color, hideCoordinate}) => {
+const EditRowForDimension = ({dimIndex, header, editKey, getDefault, numeric, color, select, hideCoordinate}) => {
     const defaultValue = getDefault(selectedPattern.value, dimIndex);
     const currentValue = findEdit(editKey)?.value ?? defaultValue;
     const coordinate = hideCoordinate ? "" : (["X", "Y"][dimIndex]);
@@ -60,7 +77,15 @@ const EditRowForDimension = ({dimIndex, header, editKey, getDefault, numeric, co
             </td>
             <td>
                 {
-                    numeric.max
+                    select
+                    ? <OptionSelector
+                        optionsKey={select.optionsKey}
+                        value={currentValue}
+                        onChange={value =>
+                            applyEdit(editKey, value)
+                        }
+                    />
+                    : numeric.max
                         ? <Slider
                             min={numeric.min ?? 0}
                             max={numeric.max}
@@ -75,6 +100,8 @@ const EditRowForDimension = ({dimIndex, header, editKey, getDefault, numeric, co
                             onChange={(value) =>
                                 applyEdit(editKey, value)
                             }
+                            min={numeric.min}
+                            max={numeric.max}
                             step={numeric.step}
                         />
                 }
@@ -87,4 +114,3 @@ const EditRowForDimension = ({dimIndex, header, editKey, getDefault, numeric, co
         </tr>
     );
 };
-

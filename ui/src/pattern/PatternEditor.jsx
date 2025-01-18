@@ -2,10 +2,10 @@ import {useEffect} from "preact/hooks";
 import {EditRow} from "../components/EditRow.jsx";
 import {ColorVariationCell} from "./ColorChooseRows.jsx";
 import {hoveredPattern, patternEdits, selectedPattern} from "../signals/pattern.js";
-import {currentSetup} from "../signals/setup.js";
 import * as Lucide from "lucide-preact";
 import {ActionButtonRow} from "../components/ActionButtonRow.jsx";
 import {TRIANGLE_RIGHT} from "../utils/constants.jsx";
+import {currentGeometry} from "../signals/segments.js";
 
 
 export const PatternEditor = ({patterns, selectedPatternId}) => {
@@ -14,19 +14,26 @@ export const PatternEditor = ({patterns, selectedPatternId}) => {
         selectedPattern.value = patterns
             .find(p => p.id === selectedPatternId)
             ?? patterns[0];
-    }, [selectedPatternId]);
+    }, [patterns, selectedPatternId]);
 
     return <>
         <EditPatterns
             patterns={patterns}
         />
-        <EditPattern/>
+        {
+            patterns.length > 0 &&
+            <EditPattern/>
+        }
     </>
 };
 
 const EditPatterns = ({patterns}) => {
     return (
-        <div className="flex flex-col">
+        <div className="flex flex-col"
+            style={{
+                flex: !selectedPattern.value ? 1 : undefined
+            }}
+        >
             <div>
                 Patterns
             </div>
@@ -119,12 +126,12 @@ const EditPattern = () => {
         );
     }
 
-    const maxLength = currentSetup.value?.derived?.maxSegmentLength;
-
-    if (!maxLength) {
+    if (!currentGeometry.value) {
         // not loaded yet
         return null;
     }
+
+    const {area, rect: {width, height}} = currentGeometry.value;
 
     return (
         <div class="flex-1 flex flex-col">
@@ -165,8 +172,12 @@ const EditPattern = () => {
                     isVector
                     getDefault={(p, d) => p.template.pos[d]}
                     numeric={{
-                        min: 0,
-                        max: maxLength,
+                        min: area.x.min,
+                        max: area.x.max,
+                    }}
+                    numericY={{
+                        min: area.y.min,
+                        max: area.y.max,
                     }}
                 />
                 <EditRow
@@ -177,7 +188,7 @@ const EditPattern = () => {
                         p.template.motion[d].vel * p.template.motion[d].sign
                     }
                     numeric={{
-                        step: 0.01
+                        step: 0.1
                     }}
                 />
                 <EditRow
@@ -187,9 +198,14 @@ const EditPattern = () => {
                     getDefault={(p, d) => p.template.size[d]}
                     numeric={{
                         min: 1,
-                        max: Math.floor(maxLength / 2)
+                        max: width
+                    }}
+                    numericY={{
+                        min: 1,
+                        max: height
                     }}
                 />
+                {/* TODO: Color Behavior might be outside the PointPattern -- later. */}
                 <EditRow
                     label={"Color"}
                     editKey={"color"}
@@ -208,6 +224,16 @@ const EditPattern = () => {
                         <ColorVariationCell/>
                     </td>
                 </tr>
+                <EditRow
+                    label={"Boundary Behaviour"}
+                    editKey={"boundary_behaviour"}
+                    isVector
+                    getDefault={(p, d) => p.template.boundary[d].behaviour}
+                    select={{
+                        optionsKey: "BoundaryBehaviour"
+                    }}
+                    onClickHeader={p => console.log(...p.template.boundary)}
+                />
                 </tbody>
             </table>
         </div>

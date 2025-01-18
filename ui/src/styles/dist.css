@@ -602,6 +602,10 @@ video {
   display: table;
 }
 
+.h-full {
+  height: 100%;
+}
+
 .w-full {
   width: 100%;
 }
@@ -668,10 +672,6 @@ video {
 
 .gap-4 {
   gap: 1rem;
-}
-
-.self-start {
-  align-self: flex-start;
 }
 
 .self-center {

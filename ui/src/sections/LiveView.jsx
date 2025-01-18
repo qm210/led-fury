@@ -4,7 +4,8 @@ import {useEffect, useMemo, useState} from "react";
 import {currentSetup} from "../signals/setup.js";
 import Loader from "../utils/Loader.jsx";
 import {signal} from "@preact/signals";
-import {debugFromOutside} from "./DebugConsole.jsx";
+import {overwriteDebug} from "./DebugConsole.jsx";
+import {currentGeometry} from "../signals/segments.js";
 
 
 const hover = signal({
@@ -21,21 +22,19 @@ const setHover = (segment = null, index = null, color = null) => {
 
 
 export const LiveView = () => {
-    // TODO ... flexible sizing, somehow
-    const height = 400;
-
     const {current} = useSequenceApi();
-
     const view = useSegmentGeometry(currentSetup.value?.segments);
 
     useEffect(() => {
-        if (view.geometry) {
-            debugFromOutside.value = {
-                source: "Geometry",
-                content: view
-            };
+        if (!view) {
+            return;
         }
-    }, [view.geometry]);
+        currentGeometry.value =
+            view.error
+                ? {error: view.error}
+                : view.geometry;
+        overwriteDebug("Geometry", view);
+    }, [view]);
 
     if (!view.geometry) {
         return (
@@ -63,7 +62,7 @@ export const LiveView = () => {
         }}>
             <svg
                 width={"100%"}
-                height={"50vh"}
+                height={"100%"}
                 viewBox={viewbox}
                 preserveAspectRatio="xMidYMid"
                 pointerEvents="all"
@@ -208,7 +207,7 @@ const PixelLabel = ({pixel, isHovered}) => {
             strokeOpacity={isHovered ? 0.5 : 0}
             x={pixel.x + 0.15}
             y={pixel.y - 0.5 + 0.95}
-            fontSize={0.6}
+            fontSize={0.3}
             textAnchor={"middle"}
         >
             {pixel.index + 1}

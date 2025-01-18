@@ -24,13 +24,17 @@ class PatternsHandler(ManHandler):
 class PatternEditHandler(ManHandler):
     def post(self):
         edits = self.body()
-        self.man.apply_pattern_edits(edits)
+        result = self.man.apply_pattern_edits(edits)
+        self.write({
+            "updatedPatterns": result[0],
+            "errors": result[1],
+        })
 
 
 class PatternHandler(ManHandler):
     def get(self, id):
         self.write(
-            self.man.get_pattern(id)
+            self.man.state.get_pattern(id)
         )
 
     def post(self, _id):

@@ -2,6 +2,7 @@ import {useMutation$, useQuery$} from "@preact-signals/query";
 import axios from "axios";
 import {useEffect} from "preact/hooks";
 import {useState} from "react";
+import {overwriteDebug} from "../sections/DebugConsole.jsx";
 
 
 axios.interceptors.request.use(
@@ -11,6 +12,22 @@ axios.interceptors.request.use(
             config.url = "http://localhost:8888/api" + config.url;
         }
         return config;
+    }
+);
+
+axios.interceptors.response.use(
+    response => response,
+    async (error) => {
+        if (axios.isAxiosError(error)) {
+            if (error.response?.status === 503 || error.code === 'ECONNREFUSED') {
+                throw error; // Re-throw the error to be handled by Preact Query
+            }
+        }
+        overwriteDebug("Backend Error", error);
+        return {
+            data: {},
+            error
+        };
     }
 );
 
@@ -26,6 +43,13 @@ export const useOverallRuns = (options = {}) =>
         queryKey: ["overall/run"],
         queryFn: () => axios.get("/overall/run"),
         ...options,
+    }));
+
+export const useOverallOptions = () =>
+    useQuery$(() => ({
+        queryKey: ["overall/options"],
+        queryFn: () => axios.get("/overall/options"),
+        staleTime: Infinity
     }));
 
 export const useSequenceApi = (options = {}) => {
@@ -84,22 +108,6 @@ export const useOverallMutations = () => {
     };
 };
 
-export const useGeometryApi = () => {
-    const getGeometry = useQuery$(() => ({
-        queryKey: ["geometry"],
-        queryFn: () => axios.get("/geometry"),
-    }));
-
-    const {mutateAsync: postSegments} = useMutation$(() => ({
-        mutationFn: (segment) => axios.post("/geometry", {segment})
-    }));
-
-    return {
-        getGeometry,
-        postSegments
-    };
-};
-
 export const useSegmentGeometry = (segments) => {
     // useQuery$ / useMutation$ showed weird behaviour, so implement own.
     // This does not use a "pending" because no need - it is a direct result of a segment change.
@@ -116,7 +124,6 @@ export const useSegmentGeometry = (segments) => {
         }
         axios.post("/geometry", segments)
             .then(res => {
-                console.log("Segments", segments, "-> Geometry", res.data ?? res);
                 setState({
                     segments,
                     geometry: res.data,

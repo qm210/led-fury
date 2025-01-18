@@ -1,4 +1,7 @@
 from app.handler import ManHandler
+from logic.patterns import BoundaryBehaviour
+from model.setup import SegmentShape
+from model.utils import list_enum_options
 
 
 class OverallStateHandler(ManHandler):
@@ -14,11 +17,6 @@ class OverallStateHandler(ManHandler):
         result = {
             "patterns": state.patterns,
             "setup": self.man.setup,
-            "info": {
-                "maxSegmentLength": state.max_length,
-                "numberSegments": state.n_segments,
-                "totalNumberPixels": state.n_pixels,
-            },
             "sequence": {
                 "length": state.sequence_length,
                 "loops": state.sequence_loops,
@@ -32,3 +30,11 @@ class OverallStateHandler(ManHandler):
 class OverallRunHandler(ManHandler):
     def get(self):
         self.write(self.man.run.__dict__)
+
+
+class OverallOptionsHandler(ManHandler):
+    def get(self):
+        self.write({
+            "SegmentShape": list_enum_options(SegmentShape),
+            "BoundaryBehaviour": list_enum_options(BoundaryBehaviour),
+        })

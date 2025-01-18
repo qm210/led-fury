@@ -1,9 +1,11 @@
-import {DragNumberInput} from "../components/DragNumberInput.jsx";
-import {currentSetup, lastRetrievedSetup} from "../signals/setup.js";
+import {currentSetup, lastSynchronizedSetup} from "../signals/setup.js";
 import {applySegmentEdit} from "../signals/segments.js";
-import {isNonlinear, SEGMENT_SHAPES} from "./segmentShapes.js";
 import {Checkbox} from "../components/Checkbox.jsx";
 import {SpinNumberInput} from "../components/SpinNumberInput.jsx";
+import {OptionSelector} from "../components/OptionSelector.js";
+
+
+const isNonlinear = s => s.shape !== "linear";
 
 export const EditSegments = () => {
     const setup = currentSetup.value;
@@ -49,14 +51,6 @@ const EditSegmentRows = ({segment, index, segments}) => {
 
     const makeKey = (...args) => ["seg", index, ...args];
 
-    const onChangeSegmentShape = (event) => {
-        const newShape = event.target.value;
-        if (segment.shape === newShape) {
-            return;
-        }
-        applySegmentEdit(makeKey("shape"), newShape);
-    };
-
     const rowSpan = segments.length + segments.filter(isNonlinear).length;
 
     return <>
@@ -82,23 +76,20 @@ const EditSegmentRows = ({segment, index, segments}) => {
                         applySegmentEdit(makeKey("len"), value)
                     }
                     min={1}
-                    resetValue={lastRetrievedSetup.value.segments[index].length}
+                    resetValue={lastSynchronizedSetup.value.segments[index].length}
                 />
             </td>
             <td>
                 Shape:
             </td>
             <td>
-                <select
+                <OptionSelector
+                    optionsKey={"SegmentShape"}
                     value={segment.shape}
-                    onChange={onChangeSegmentShape}
-                >
-                    {SEGMENT_SHAPES.map(kv =>
-                        <option value={kv.value}>
-                            {kv.name}
-                        </option>
-                    )}
-                </select>
+                    onChange={value =>
+                        applySegmentEdit(makeKey("shape"), value)
+                    }
+                />
             </td>
         </tr>
         {

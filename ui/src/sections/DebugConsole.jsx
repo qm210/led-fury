@@ -1,13 +1,22 @@
 import {useOverallRuns, useOverallState} from "../api/apiHooks.js";
 import {useEffect, useState, useCallback} from "react";
 import {segmentEdits} from "../signals/segments.js";
-import {currentSetup, lastRetrievedSetup} from "../signals/setup.js";
+import {currentSetup, lastSynchronizedSetup} from "../signals/setup.js";
 import {signal} from "@preact/signals";
 
-export const debugFromOutside = signal({
+
+const debugOverwrite = signal({
     source: null,
     content: {}
 });
+
+export const overwriteDebug = (source, content) => {
+    debugOverwrite.value = {
+        source,
+        content
+    };
+};
+
 
 export const DebugConsole = () => {
     const {refetch: fetchOverall} = useOverallState({enabled: false});
@@ -15,7 +24,7 @@ export const DebugConsole = () => {
     const [log, setLog] = useState("");
     const [enabled, setEnabled] = useState({
         segments: false
-    });
+    })
 
     const asLog = (r) => {
         if (typeof r === "object") {
@@ -25,12 +34,15 @@ export const DebugConsole = () => {
         return r;
     };
 
-    const updateLog = (r) =>
+    const updateLog = (r) => {
+        debugOverwrite.value = null;
         setLog(asLog(r));
+    };
+
 
     const logSegments = useCallback(() => {
         console.log(
-            lastRetrievedSetup.value,
+            lastSynchronizedSetup.value,
             currentSetup.value,
             segmentEdits.value
         );
@@ -50,16 +62,16 @@ export const DebugConsole = () => {
     }, [enabled.segments, currentSetup.value]);
 
     useEffect(() => {
-        if (debugFromOutside.value) {
+        if (debugOverwrite.value) {
             setLog(
                 JSON.stringify(
-                    debugFromOutside.value.content,
+                    debugOverwrite.value.content,
                     null,
                     2
                 )
             );
         }
-    }, [debugFromOutside.value]);
+    }, [debugOverwrite.value]);
 
     return (
         <div class="self-stretch p-2 flex flex-col"
@@ -96,9 +108,9 @@ export const DebugConsole = () => {
                     Segments
                 </span>
                 {
-                    debugFromOutside.value &&
+                    debugOverwrite.value &&
                     <span className={"text-red-800 font-bold"}>
-                        {debugFromOutside.value.source}
+                        {debugOverwrite.value.source}
                     </span>
                 }
 

@@ -1,16 +1,15 @@
 import {signal} from "@preact/signals";
 import {keysMatch} from "./createEditFunctions.js";
-import {currentSetup, lastRetrievedSetup, updateCurrentSetupFromEdits} from "./setup.js";
+import {lastSynchronizedSetup, updateCurrentSetupFromEdits} from "./setup.js";
 
 
 export const segmentEdits = signal([]);
 
+export const currentGeometry = signal(null);
+
 
 const setupStorageKey = "led.fury.edits.setup";
 
-
-export const findSegmentEdit = (key) =>
-    segmentEdits.value.find(edit => keysMatch(edit.key, key));
 
 
 // TODO: unify with createEditFunctions / the pattern edit signals, but this is the more basic version.
@@ -40,7 +39,7 @@ export const applySegmentEdit = (key, value) => {
 
     localStorage.setItem(setupStorageKey, JSON.stringify({
         edits,
-        lastSetup: lastRetrievedSetup.value,
+        lastSetup: lastSynchronizedSetup.value,
     }));
 };
 
@@ -60,7 +59,7 @@ export const loadSetupFromStorage = (id) => {
             localStorage.removeItem(setupStorageKey);
             return false;
         }
-        lastRetrievedSetup.value = parsed.lastSetup;
+        lastSynchronizedSetup.value = parsed.lastSetup;
         segmentEdits.value = parsed.edits;
         return true;
     } catch (err) {

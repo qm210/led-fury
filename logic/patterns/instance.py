@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from math import exp
 from typing import TYPE_CHECKING
 
-from tornado.log import gen_log
+from tornado.log import app_log
 
 from logic.color import HsvColorArray
 from logic.patterns.PointPattern import PointPattern, PointPatternState
@@ -32,10 +32,13 @@ class PatternInstance:
             color = s.color.copy()
             color.scale_v(power_exp)
 
+            if state.verbose:
+                app_log.info(f"Pattern \"{self.pattern_id}\" @ ({x}, {y}): power={power_exp}, color={color}")
+
             try:
                 self.pixels[x, y] = color
             except Exception as e:
-                gen_log.warning(f"Could not render pixel ({x},{y}): {str(e)}")
+                app_log.warning(f"Could not render pixel ({x},{y}): {str(e)}")
                 pass
 
             # TODO: try different modes:

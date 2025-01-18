@@ -1,9 +1,5 @@
 from contextlib import contextmanager
-from dataclasses import asdict
-from datetime import datetime
-from itertools import chain
-from json import dumps
-from typing import Optional, List
+from typing import Optional, List, Tuple
 
 from tornado.ioloop import PeriodicCallback
 
@@ -56,20 +52,12 @@ class SequenceMan:
         return UdpSender(self.setup.host, self.setup.port)
 
     def get_state_json(self):
-        try:
-            instance_iterator = chain.from_iterable(self.run.pattern_instances.values())
-            first_instance = next(instance_iterator)
-            first_pattern = self.state.patterns[0]
-            first_instance = asdict(first_instance.instance)
-        except StopIteration:
-            first_instance = None
-            first_pattern = None
         return {
             "running": self.running,
             "current_sec": self.run.current_sec,
             "delta_sec": self.run.delta_sec,
-            "first_instance": first_instance,
-            "pattern": first_pattern,
+            "patterns": self.state.patterns,
+            "instances": list(self.run.pattern_instances.values()),
             "values": self.state.rgb_value_list
         }
 
@@ -115,15 +103,9 @@ class SequenceMan:
             )
         ]
 
-    def zipped_pattern_instances(self):
-        for pattern in self.state.patterns:
-            for instance in self.run.pattern_instances[pattern.id]:
-                yield pattern, instance.instance
-
     def shuffle_pattern_colors(self):
-        # usage example of self.zipped_pattern_instances()
-        for pattern, instance in self.zipped_pattern_instances():
-            instance.color.randomize(
+        for pattern, instance in self.state.patterns_with_instances(self.run):
+            instance.state.color.randomize(
                 h=pattern.template.hue_delta,
                 s=pattern.template.sat_delta,
                 v=pattern.template.val_delta,
@@ -161,6 +143,7 @@ class SequenceMan:
 
     @contextmanager
     def sequence_paused_if_running(self):
+        # for usage as "with self.sequence_paused_if_running(): ..."
         was_running = self.running
         if was_running:
             self.run.process.stop()
@@ -183,14 +166,8 @@ class SequenceMan:
         else:
             self.state.patterns.append(new_pattern)
 
-    def get_pattern(self, id: str) -> Optional[Pattern]:
-        return next((
-            pattern
-            for pattern in self.state.patterns
-            if pattern.id == id
-        ), None)
-
-    def apply_pattern_edits(self, edits):
+    def apply_pattern_edits(self, edits: List[dict]) -> Tuple[List[Pattern], List[str]]:
         if not edits:
-            return
-        pass
+            return [], []
+        with self.sequence_paused_if_running():
+            return self.state.apply_pattern_edit_jsons(edits)

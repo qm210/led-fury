@@ -1,5 +1,7 @@
 import asyncio
 import json
+from json import JSONDecodeError
+from logging import DEBUG
 
 import tornado
 
@@ -7,7 +9,7 @@ from app.json import JsonEncoder
 from handlers.geometry import GeometryHandler
 
 from handlers.main import MainHandler, ShutdownHandler, TestPageHandler, FileStoreHandler
-from handlers.overall import OverallStateHandler, OverallRunHandler
+from handlers.overall import OverallStateHandler, OverallRunHandler, OverallOptionsHandler
 from handlers.pattern import PatternsHandler, PatternHandler, PatternEditHandler
 from handlers.single import SingleHandler
 from handlers.sequence import StartSequenceHandler, StopSequenceHandler, SequenceInfoHandler
@@ -34,6 +36,7 @@ class Application(tornado.web.Application):
 
                 (r"/api/overall/state", OverallStateHandler),
                 (r"/api/overall/run", OverallRunHandler),
+                (r"/api/overall/options", OverallOptionsHandler),
 
                 (r"/api/patterns", PatternsHandler),
                 (r"/api/pattern/edits", PatternEditHandler),
@@ -55,14 +58,20 @@ class Application(tornado.web.Application):
         self.shutdown_event = asyncio.Event()
         self.recent_filename = ""
 
+        tornado.log.enable_pretty_logging()
+        self.log = tornado.log.app_log
+        self.log.setLevel(DEBUG)
+
     def load_state(self, filename):
         try:
             with open(filename, 'r') as f:
                 stored = json.load(f)
         except FileNotFoundError:
             return
+        except JSONDecodeError as exc:
+            print("State File seems broken:", filename, str(exc))
         except Exception as exc:
-            print("cannot load state", filename, str(exc))
+            print("Can't load State File", filename, str(exc))
             raise exc
         self.man.init_from(stored)
         self.recent_filename = filename

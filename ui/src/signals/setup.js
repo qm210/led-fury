@@ -1,12 +1,12 @@
 import {signal} from "@preact/signals";
 import {segmentEdits} from "./segments.js";
 
-export const lastRetrievedSetup = signal(undefined);
+export const lastSynchronizedSetup = signal(undefined);
 export const currentSetup = signal(undefined);
 
 
 export const updateCurrentSetupFromEdits = () => {
-    const setup = structuredClone(lastRetrievedSetup.value);
+    const setup = structuredClone(lastSynchronizedSetup.value);
     for (const edit of segmentEdits.value) {
         const [segKey, segIndex, key] = edit.key.split(".");
         if (segKey !== "seg") {

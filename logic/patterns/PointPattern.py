@@ -11,8 +11,8 @@ if TYPE_CHECKING:
 
 @dataclass
 class PointPattern:
-    pos: List[int] = field(default_factory=lambda: [0, 0])
-    size: List[int] = field(default_factory=lambda: [1, 1])
+    pos: List[float] = field(default_factory=lambda: [0, 0])
+    size: List[float] = field(default_factory=lambda: [1, 1])
     motion: List[PointMotion] = field(default_factory=lambda: [PointMotion(), PointMotion()])
     boundary: List[Boundary] = field(default_factory=lambda: [Boundary(), Boundary()])
     color: HsvColor = field(default_factory=HsvColor)
@@ -93,22 +93,23 @@ class PointPatternState:
             return
 
         # should all be 2D by now
-        for dim in range(len(self.pos)):
+        for dim in range(2):
             m = template.motion[dim]
             p = self.pos[dim] + m.vel * m.sign * run.delta_sec
 
             boundary = template.boundary[dim]
             if boundary.behaviour is BoundaryBehaviour.Wrap:
-                if p > boundary.max:
-                    p = boundary.min
-                elif p < boundary.min:
-                    p = boundary.max
+                if not boundary.min <= p <= boundary.max:
+                    span = boundary.max - boundary.min + 1
+                    p = boundary.min + (p % span)
             elif boundary.behaviour is BoundaryBehaviour.Bounce:
-                if p > boundary.max and m.sign > 0:
+                if p > boundary.max:
                     p = boundary.max
                     m.sign = -1
-                elif p < boundary.min and m.sign < 0:
+                elif p < boundary.min:
                     p = boundary.min
                     m.sign = +1
+            else:
+                print("What is BoundaryBehaviour?", boundary, boundary.behaviour)
 
             self.pos[dim] = p

@@ -1,8 +1,9 @@
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Union, Optional, TYPE_CHECKING
+from typing import Union, Optional, TYPE_CHECKING, Any
 
-from logic.color import HsvColorArray
+from logic.color import HsvColorArray, HsvColor
+from logic.patterns import BoundaryBehaviour
 from logic.patterns.PointPattern import PointPattern, PointPatternState
 from logic.patterns.instance import PatternInstance
 from logic.time import current_timestamp
@@ -91,3 +92,32 @@ class Pattern:
         for line in pixels:
             for color in line:
                 color.scale_v(self.fade)
+
+    def update_from_edit_json(self, key: str, dim: int = 0, subkeys: list = None, value: Any = None):
+        if self.type is not PatternType.Point:
+            raise ValueError(f"Cannot Update Pattern of unknown type: {self.type.value}")
+        template = self.template
+        match key:
+            case "pos":
+                template.pos[dim] = float(value)
+            case "vel":
+                template.motion[dim].vel = abs(float(value))
+                template.motion[dim].sign = -1 if float(value) < 0 else +1
+            case "acc":
+                template.motion[dim].acc = float(value)
+            case "size":
+                template.size[dim] = float(value)
+            case "color":
+                template.color = HsvColor.from_json(value)
+            case "deltaHue":
+                template.hue_delta = int(value)
+            case "deltaSat":
+                template.sat_delta = int(value)
+            case "deltaVal":
+                template.val_delta = int(value)
+            case "fade":
+                self.fade = float(value)
+            case "boundary_behaviour":
+                template.boundary[dim].behaviour = BoundaryBehaviour(value)
+            case _:
+                raise KeyError(f"Unknown Key: {key} {dim} {subkeys} => {value}")

@@ -24,6 +24,9 @@ class HsvColor:
     s: float = 0
     v: float = 0
 
+    def __repr__(self):
+        return f"[H{self.h}|S{self.s}|V{round(self.v, 2)}]"
+
     @classmethod
     def Random(cls, h=None, s=None, v=None):
         if h is None:
@@ -71,6 +74,16 @@ class HsvColor:
     def to_rgb(self):
         r, g, b = hsv_to_rgb(self.h/360, self.s/100, self.v/100)
         return [255 * r, 255 * g, 255 * b]
+
+    @classmethod
+    def from_json(cls, json: dict):
+        result = cls(
+            json.get("h", 0),
+            json.get("s", 100),
+            json.get("v", 100)
+        )
+        result.sanitize()
+        return result
 
 
 def create_flat_rgb_gradient(length, rgb1, rgb2):

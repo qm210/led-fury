@@ -1,5 +1,4 @@
 from app.handler import ManHandler
-from logic.geometry.calculate import GeometryMan
 from model.setup import PixelSegment
 
 

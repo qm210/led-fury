@@ -3,6 +3,11 @@ import json
 from enum import Enum
 
 
+def is_dict_values(obj):
+    # no idea where the import dict_values from
+    return type(obj).__name__ == 'dict_values'
+
+
 class JsonEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, Enum):
@@ -12,16 +17,6 @@ class JsonEncoder(json.JSONEncoder):
         try:
             return super().default(obj)
         except TypeError:
+            if is_dict_values(obj):
+                return self.default(list(obj))
             return str(obj)
-
-#
-# class JsonDecoder(json.JSONDecoder):
-#     def __init__(self, *args, **kwargs):
-#         super().__init__(object_hook=self.object_hook, *args, **kwargs)
-#
-#     @staticmethod
-#     def object_hook(obj):
-#         if isinstance(obj, str):
-#             # might be enum?
-#             pass
-#         return obj

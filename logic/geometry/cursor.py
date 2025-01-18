@@ -25,16 +25,12 @@ class GeometryCursor(Vec2d):
             self.payload["stretch"] = stretch
             self.payload["angle"] = 2 * pi / segment.divisions
 
-    def debug(self, msg: str):
-        tornado.log.gen_log.debug(msg)
-
     def move_next(self, segment: PixelSegment, index: int):
         next = index + 1
         match segment.shape:
             case SegmentShape.Linear:
                 self.x += self.step
             case SegmentShape.Rectangle:
-                self.debug(f"Index {index}, {next}, {self.payload}")
                 if next % self.payload["stretch"] == 0:
                     if segment.alternating:
                         self.direction.x *= -1

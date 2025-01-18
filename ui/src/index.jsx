@@ -13,6 +13,7 @@ import './styles/index.css';
 import './styles/components.css';
 import './styles/dist.css'; // tailwind build, generate via "npm run tailwind:build"
 import 'rc-slider/assets/index.css';
+import ErrorBoundary from "./sections/ErrorBoundary.js";
 
 
 const queryClient = new QueryClient();
@@ -28,18 +29,20 @@ const Layout = () =>
 	<>
 		<Header/>
 		<main>
-			<Suspense fallback={<Loader/>}>
-				<Router>
-					<Route
-						path={"/"}
-						component={EditorPage}
-					/>
-					<Route
-						default
-						component={NotFound}
-					/>
-				</Router>
-			</Suspense>
+			<ErrorBoundary>
+				<Suspense fallback={<Loader/>}>
+					<Router>
+						<Route
+							path={"/"}
+							component={EditorPage}
+						/>
+						<Route
+							default
+							component={NotFound}
+						/>
+					</Router>
+				</Suspense>
+			</ErrorBoundary>
 		</main>
 	</>;
 

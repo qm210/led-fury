@@ -1,4 +1,5 @@
 import {useEffect, useState} from "react";
+import {countDecimalPlaces} from "../utils/math.js";
 
 const NUMERIC_REGEX = /^-?[0-9]+([,.][0-9]+)?$/;
 
@@ -42,6 +43,7 @@ export const DragNumberInput = ({
             initX: event.clientX,
             initValue: +field,
             step,
+            decimalPlaces: countDecimalPlaces(step),
         });
     };
 
@@ -52,18 +54,22 @@ export const DragNumberInput = ({
             if (dragState?.initValue === undefined) {
                 return;
             }
-            newValue = clamped(
-                dragState.initValue + dragState.step * (event.clientX - dragState.initX)
-            );
-            setField(+newValue.toFixed(2));
+            newValue = dragState.initValue + dragState.step * (event.clientX - dragState.initX);
+            newValue = clamped(newValue);
+            if (dragState.decimalPlaces > 0) {
+                newValue = +newValue.toFixed(dragState.decimalPlaces);
+            }
+            setField(newValue);
         };
 
         const onEnd = () => {
-            if (!dragState || newValue === undefined) {
+            if (!dragState) {
                 return;
             }
             setDragState(null);
-            onChange(newValue);
+            if (newValue !== undefined) {
+                onChange(newValue);
+            }
             newValue = undefined;
         }
 
@@ -85,7 +91,7 @@ export const DragNumberInput = ({
     return (
         <input
             value={field}
-            onKeyPress={onKeyPress}
+            onKeyUp={onKeyPress}
             onMouseDown={startDrag}
             onDblClick={onDoubleClick}
             onFocus={e => e.target.select()}

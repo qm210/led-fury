@@ -1,4 +1,5 @@
 import tornado.websocket
+from tornado.log import app_log
 
 
 class WebSocketHandler(tornado.websocket.WebSocketHandler):
@@ -25,4 +26,4 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
             for client in cls.clients:
                 client.write_message(message)
         except Exception as e:
-            tornado.log.gen_log.warning(f"Websocket cannot send \"{message}\": {str(e)}")
+            app_log.warning(f"Websocket cannot send \"{message}\": {str(e)}")
