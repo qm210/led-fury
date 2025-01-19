@@ -1,33 +1,25 @@
-import {useEffect} from "preact/hooks";
 import {EditRow} from "../components/EditRow.jsx";
 import {ColorVariationCell} from "./ColorChooseRows.jsx";
-import {hoveredPattern, patternEdits, selectedPattern} from "../signals/pattern.js";
+import {hoveredPattern, synchronizedPatterns, patternEdits, selectedPattern} from "../signals/pattern.js";
 import * as Lucide from "lucide-preact";
-import {ActionButtonRow} from "../components/ActionButtonRow.jsx";
-import {TRIANGLE_RIGHT} from "../utils/constants.jsx";
-import {currentGeometry} from "../signals/segments.js";
+import {ActionButtons} from "../components/ActionButtons.jsx";
+import {INFINITY, PLUSMINUS, THIN_SPACE, TRIANGLE_RIGHT} from "../utils/constants.jsx";
+import {currentGeometry} from "../signals/setup.js";
 
 
-export const PatternEditor = ({patterns, selectedPatternId}) => {
+export const PatternEditor = () =>
+    <>
+        <EditPatterns/>
+        <EditPattern/>
+    </>;
 
-    useEffect(() => {
-        selectedPattern.value = patterns
-            .find(p => p.id === selectedPatternId)
-            ?? patterns[0];
-    }, [patterns, selectedPatternId]);
+const EditPatterns = () => {
+    const patterns = synchronizedPatterns.value;
 
-    return <>
-        <EditPatterns
-            patterns={patterns}
-        />
-        {
-            patterns.length > 0 &&
-            <EditPattern/>
-        }
-    </>
-};
+    if (!selectedPattern.value) {
+        return null;
+    }
 
-const EditPatterns = ({patterns}) => {
     return (
         <div className="flex flex-col"
             style={{
@@ -59,7 +51,7 @@ const EditPatterns = ({patterns}) => {
                     </>
                 }
             </div>
-            <ActionButtonRow
+            <ActionButtons
                 actions={[{
                     element: Lucide.CopyPlus,
                     tooltip: `Copy Pattern "${selectedPattern.value?.name}"`,
@@ -116,6 +108,11 @@ const PatternListEntry = ({pattern}) => {
 };
 
 const EditPattern = () => {
+    if (!currentGeometry.value?.geometry) {
+        return null;
+    }
+
+    const {area, rect: {width, height}} = currentGeometry.value.geometry;
     const pattern = hoveredPattern.value ?? selectedPattern.value;
 
     if (!pattern) {
@@ -126,13 +123,6 @@ const EditPattern = () => {
         );
     }
 
-    if (!currentGeometry.value) {
-        // not loaded yet
-        return null;
-    }
-
-    const {area, rect: {width, height}} = currentGeometry.value;
-
     return (
         <div class="flex-1 flex flex-col">
             <div
@@ -142,7 +132,6 @@ const EditPattern = () => {
             </div>
             <table class="w-full border-2 rounded-sm border-gray-300">
                 <tbody>
-                {/* start_sec, stop_sec*/}
                 <tr>
                     <td>Type</td>
                     <td/>
@@ -174,10 +163,12 @@ const EditPattern = () => {
                     numeric={{
                         min: area.x.min,
                         max: area.x.max,
+                        step: 0.5,
                     }}
                     numericY={{
                         min: area.y.min,
                         max: area.y.max,
+                        step: 0.5,
                     }}
                 />
                 <EditRow
@@ -229,6 +220,7 @@ const EditPattern = () => {
                     editKey={"boundary_behaviour"}
                     isVector
                     getDefault={(p, d) => p.template.boundary[d].behaviour}
+                    getExtra={formatBoundary}
                     select={{
                         optionsKey: "BoundaryBehaviour"
                     }}
@@ -238,4 +230,26 @@ const EditPattern = () => {
             </table>
         </div>
     );
+};
+
+const formatOptionalNumber = (value) => {
+    if (value === undefined || value === null) {
+        return "";
+    }
+    const digits = 1;
+    const result = value.toFixed(digits);
+    if (result.endsWith('.' + "0".repeat(digits))) {
+        return result.slice(0, -digits-1);
+    }
+    return result;
+};
+
+const formatBoundary = (pattern, dim) => {
+    const boundary = pattern.template.boundary[dim];
+    const min = formatOptionalNumber(boundary.min);
+    const max = formatOptionalNumber(boundary.max);
+    const range = !min && !max
+        ? `${PLUSMINUS}${INFINITY}`
+        : [min, "..", max].filter(x => !!x).join(THIN_SPACE);
+    return `[${range}]`;
 };

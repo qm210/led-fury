@@ -1,4 +1,5 @@
 import {TRIANGLE_LEFT, TRIANGLE_RIGHT} from "../utils/constants.jsx";
+import {countDecimalPlaces} from "../utils/math.js";
 
 export const SpinNumberInput = ({
     value,
@@ -6,22 +7,23 @@ export const SpinNumberInput = ({
     min = undefined,
     max = undefined,
     step = 1,
-    resetValue = undefined
+    resetValue = undefined,
+    style = undefined
 }) => {
 
     const valuePlus = (delta) => {
-        let result = value + delta;
+        let result = (+value) + delta;
         if (min !== undefined && result < min) {
             return min;
         }
         if (max !== undefined && result > max) {
             return max;
         }
-        return result;
+        return +(result.toFixed(3));
     };
 
     return (
-        <div class={"number-input-spinner"}>
+        <div class={"number-input-spinner"} style={style}>
             <button
                 onClick = {() => onChange(valuePlus(-step))}
                 disabled = {value <= min}

@@ -1,4 +1,4 @@
-import {useOverallOptions} from "./apiHooks.js";
+import {useOverallOptions} from "./api.js";
 import {useComputed, useSignal} from "@preact/signals";
 import {useEffect} from "preact/hooks";
 

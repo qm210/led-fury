@@ -1,12 +1,18 @@
 import json
 from collections import defaultdict
 from dataclasses import dataclass, field
+from enum import Enum
 from time import perf_counter
 from typing import Optional, List
 
 from tornado.ioloop import PeriodicCallback
 
 from logic.patterns.instance import PatternInstance
+
+
+class RunMode(Enum):
+    Run = "run"
+    Seek = "seek"
 
 
 @dataclass
@@ -16,15 +22,19 @@ class RunState:
     previous_sec: Optional[float] = None
     process: Optional[PeriodicCallback] = None
     pattern_instances: dict[str, List[PatternInstance]] = field(default_factory=lambda: defaultdict(list))
+    mode: RunMode = field(default=RunMode.Run)
 
-    def init_times(self):
+    def initialize(self, seek=False):
         self.start_sec = perf_counter()
         self.current_sec = 0
         self.previous_sec = None
+        self.mode = RunMode.Seek if seek else RunMode.Run
 
-    def update_times(self):
+    def update_times(self, second=None):
+        if second is None:
+            second = perf_counter()
         self.previous_sec = self.current_sec
-        self.current_sec = perf_counter() - self.start_sec
+        self.current_sec = second - self.start_sec
 
     @property
     def delta_sec(self):

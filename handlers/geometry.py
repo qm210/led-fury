@@ -13,4 +13,7 @@ class GeometryHandler(ManHandler):
             for segment in self.body()
         ]
         self.man.apply_setup_change(segments)
-        self.write(self.man.state.geometry)
+        self.write({
+            "geometry": self.man.state.geometry,
+            "segments": self.man.setup.segments,
+        })

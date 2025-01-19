@@ -1,56 +1,91 @@
 import * as Lucide from "lucide-preact";
-import {useOverallMutations, usePatternApi, useSequenceApi} from "../api/apiHooks.js";
+import {storeToFile, useSequenceApi} from "../api/api.js";
 
-import {patternEdits, updateLastSynchronizedPatterns} from "../signals/pattern.js";
-import {ActionButtonRow} from "../components/ActionButtonRow.jsx";
-import {overwriteDebug} from "./DebugConsole.jsx";
+import {synchronizedPatterns} from "../signals/pattern.js";
+import {ActionButton, ActionButtons} from "../components/ActionButtons.jsx";
+import {SpinNumberInput} from "../components/SpinNumberInput.jsx";
+import {signal} from "@preact/signals";
+import {useState} from "react";
+import {synchronize} from "../signals/app.js";
+
+
+const currentSecond = signal(0);
 
 
 export const ControlButtons = () => {
-    const {storeToFile} = useOverallMutations();
-    const {start, stop, readCurrent} = useSequenceApi();
-    const {postPatternEdits} = usePatternApi();
-    const storeFilename = "test.fury";
+    const {start, stop} = useSequenceApi();
+
+    if (!synchronizedPatterns.value.length) {
+        return null;
+    }
 
     return (
-        <ActionButtonRow
-            actions={[{
-                element: Lucide.Play,
-                onClick: () =>
-                    postPatternEdits(patternEdits.value)
-                        .then(res => {
-                            if (!res.data) {
-                                console.warn("postPatternEdits() failed!", res);
-                                overwriteDebug("Backend Pattern Error", res);
-                                return;
-                            }
-                            console.log("res.data", res.data);
-                            updateLastSynchronizedPatterns(res.data.updatedPatterns);
-                            if (res.data.errors.length > 0) {
-                                overwriteDebug("Pattern Update Errors", res.data.errors);
-                            }
-                            start();
-                        }),
-                tooltip: "Start Sequence",
-            }, {
-                element: Lucide.Square,
-                onClick: stop,
-                tooltip: "Stop Sequence",
-            },
-                /*
-                {
-                element: Lucide.ListRestart,
-                onClick: readCurrent,
-                tooltip: "Refresh Pixel Colors",
-            },
-                */
-            {
-                element: Lucide.FileInput,
-                onClick: () => storeToFile("test.fury"),
-                tooltip: `Store Pattern to File ("${storeFilename}")`,
-                style: {marginLeft: "auto"}
-            }]}
-        />
+        <div class={"flex w-full justify-stretch items-stretch"}>
+            <ActionButtons
+                actions={[
+                    {
+                        element: Lucide.ListRestart,
+                        onClick: synchronize,
+                        tooltip: "Synchronize with Backend",
+                    }, {
+                        element: Lucide.Play,
+                        onClick: () =>
+                            synchronize()
+                                .then(start),
+                        tooltip: "Start Sequence",
+                    }, {
+                        element: Lucide.Square,
+                        onClick: stop,
+                        tooltip: "Stop Sequence",
+                    }]}
+            />
+            <div class={"flex-1"}>
+                <TimeSeeker/>
+            </div>
+            <ActionButtons
+                actions={[{
+                    element: Lucide.FileInput,
+                    onClick: () =>
+                        synchronize()
+                            .then(storeToFile),
+                    tooltip: `Store Pattern to File`,
+                    style: {
+                        marginLeft: "Auto"
+                    }
+                }]}
+            />
+        </div>
     );
 };
 
+const TimeSeeker = () => {
+    const {seekTime} = useSequenceApi();
+    const [second, setSecond] = useState(currentSecond.value);
+
+    return (
+        <div class={"flex gap-2 items-center"}>
+            <div>
+                Seek:
+            </div>
+            <div class={"flex flex-col justify-stretch h-full"}>
+                <SpinNumberInput
+                    step={0.1}
+                    value={second}
+                    onChange={value => setSecond(value)}
+                    min={0}
+                />
+            </div>
+            <ActionButton
+                onClick={() =>
+                    seekTime(second)
+                        .then(second => {
+                            currentSecond.value = second;
+                        })
+                }
+                tooltip={"Jump to given second."}
+            >
+                <Lucide.Goal/>
+            </ActionButton>
+        </div>
+    )
+};

@@ -1,18 +1,16 @@
 import {signal} from "@preact/signals";
 import {keysMatch} from "./createEditFunctions.js";
-import {lastSynchronizedSetup, updateCurrentSetupFromEdits} from "./setup.js";
+import {currentSetup, synchronizedSetup, updateCurrentSetupFromEdits} from "./setup.js";
 
 
 export const segmentEdits = signal([]);
-
-export const currentGeometry = signal(null);
 
 
 const setupStorageKey = "led.fury.edits.setup";
 
 
-
-// TODO: unify with createEditFunctions / the pattern edit signals, but this is the more basic version.
+// TODO: unify with crea
+//  teEditFunctions / the pattern edit signals, but this is the more basic version.
 export const applySegmentEdit = (key, value) => {
     if (key instanceof Array) {
         key = key.join(".");
@@ -35,14 +33,19 @@ export const applySegmentEdit = (key, value) => {
     // need to assign new reference
     segmentEdits.value = edits;
 
-    updateCurrentSetupFromEdits();
-
     localStorage.setItem(setupStorageKey, JSON.stringify({
         edits,
-        lastSetup: lastSynchronizedSetup.value,
+        lastSetup: synchronizedSetup.value,
     }));
+
+    return updateCurrentSetupFromEdits();
 };
 
+export const resetSetupEdits = () => {
+    synchronizedSetup.value = currentSetup.value;
+    segmentEdits.value = [];
+    localStorage.removeItem(setupStorageKey);
+};
 
 export const loadSetupFromStorage = (id) => {
     try {
@@ -59,7 +62,7 @@ export const loadSetupFromStorage = (id) => {
             localStorage.removeItem(setupStorageKey);
             return false;
         }
-        lastSynchronizedSetup.value = parsed.lastSetup;
+        synchronizedSetup.value = parsed.lastSetup;
         segmentEdits.value = parsed.edits;
         return true;
     } catch (err) {

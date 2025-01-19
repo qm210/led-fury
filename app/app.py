@@ -1,5 +1,6 @@
 import asyncio
 import json
+import os
 from json import JSONDecodeError
 from logging import DEBUG
 
@@ -8,18 +9,18 @@ import tornado
 from app.json import JsonEncoder
 from handlers.geometry import GeometryHandler
 
-from handlers.main import MainHandler, ShutdownHandler, TestPageHandler, FileStoreHandler
+from handlers.main import MainHandler, ShutdownHandler, FileStoreHandler
 from handlers.overall import OverallStateHandler, OverallRunHandler, OverallOptionsHandler
 from handlers.pattern import PatternsHandler, PatternHandler, PatternEditHandler
 from handlers.single import SingleHandler
-from handlers.sequence import StartSequenceHandler, StopSequenceHandler, SequenceInfoHandler
+from handlers.sequence import StartSequenceHandler, StopSequenceHandler, SequenceInfoHandler, SequenceSeekHandler
 from handlers.websocket import WebSocketHandler
 from logic.time import current_timestamp
 from service.SequenceMan import SequenceMan
 
 
 class Application(tornado.web.Application):
-    def __init__(self, **kwargs):
+    def __init__(self, verbose=False, **kwargs):
         super().__init__(
             handlers=[
                 (r"/", MainHandler),
@@ -38,29 +39,29 @@ class Application(tornado.web.Application):
                 (r"/api/overall/run", OverallRunHandler),
                 (r"/api/overall/options", OverallOptionsHandler),
 
+                (r"/api/geometry", GeometryHandler),
+
                 (r"/api/patterns", PatternsHandler),
                 (r"/api/pattern/edits", PatternEditHandler),
                 (r"/api/pattern/([a-zA-Z0-9_-]+)", PatternHandler),
 
                 (r"/api/sequence/start", StartSequenceHandler),
                 (r"/api/sequence/stop", StopSequenceHandler),
+                (r"/api/sequence/seek", SequenceSeekHandler),
                 (r"/api/sequence", SequenceInfoHandler),
 
-                (r"/api/geometry", GeometryHandler),
-
-                (r"/api/test", TestPageHandler),
+                # these are old:
                 (r"/api/single", SingleHandler),
             ],
             # static_path=os.path.join(os.path.dirname(__file__), "ui/dist/")
             **kwargs
         )
-        self.man = SequenceMan.get_instance()
+        self.man = SequenceMan(verbose)
         self.shutdown_event = asyncio.Event()
         self.recent_filename = ""
 
         tornado.log.enable_pretty_logging()
-        self.log = tornado.log.app_log
-        self.log.setLevel(DEBUG)
+        tornado.log.app_log.setLevel(DEBUG)
 
     def load_state(self, filename):
         try:
@@ -76,9 +77,11 @@ class Application(tornado.web.Application):
         self.man.init_from(stored)
         self.recent_filename = filename
 
-    def store_state(self, filename=""):
+    def store_state(self, filename="", overwrite=False):
         if filename == "":
-            filename = f"store_{current_timestamp()}.fury"
+            filename = self.recent_filename
+        if os.path.exists(filename) and not overwrite:
+            os.rename(filename, f"{filename}.{current_timestamp()}")
         store = {
             "state": self.man.state,
             "setup": self.man.setup,

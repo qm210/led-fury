@@ -1,17 +1,15 @@
-import tornado
-
+from app.handler import ManHandler
 from logic.color import create_flat_rgb_gradient
 from service.SequenceMan import SequenceMan
 
 
-class SingleHandler(tornado.web.RequestHandler):
+class SingleHandler(ManHandler):
     """
         was a very first draft that is just kept here for reference
     """
 
     def post(self):
-        man = SequenceMan().get_instance()
-        sender = man.make_sender()
+        sender = self.man.make_sender()
         # Hyperion
         # sender.send([
         #     col
@@ -23,7 +21,7 @@ class SingleHandler(tornado.web.RequestHandler):
             2,
             2,
             *create_flat_rgb_gradient(
-                man.state.max_length,
+                self.man.state.max_length,
                 [255, 0, 128],
                 [0, 180, 240],
             )

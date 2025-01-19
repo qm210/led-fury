@@ -1,4 +1,5 @@
 
+
 .pattern-list {
     display: grid;
     grid-template-columns: auto 1fr;
@@ -32,7 +33,7 @@
     -webkit-appearance: none;
     -moz-appearance: none;
 
-    width: 6rem;
+    max-width: 5rem;
     outline: 0;
     padding-left: 0.9rem;
     text-align: center;

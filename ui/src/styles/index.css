@@ -13,6 +13,7 @@
 	-webkit-text-size-adjust: 100%;
 
 	--hover-pink: #dc00af66;
+	--some-violet: #4a247f;
 }
 
 body {
@@ -28,12 +29,19 @@ body {
 header {
 	display: flex;
 	justify-content: stretch;
-	background-color: #673ab8;
+	align-items: center;
+	background-color: var(--some-violet);
+	padding: 2px;
 }
 
 header nav {
 	display: flex;
 	flex: 1;
+}
+
+header button {
+	margin: 2px;
+	box-shadow: 1px 1px 2px #FFF3;
 }
 
 header a {
@@ -88,9 +96,11 @@ main {
 button {
 	border: 1px solid grey;
 	border-radius: 0;
-	background-color: #9ca3af;
 	cursor: pointer;
+	padding: 0.5rem;
 	transition: 200ms ease-out;
+	display: flex;
+	gap: 0.5rem;
 }
 
 button:hover:enabled {
@@ -132,7 +142,7 @@ button:disabled {
 select {
 	border: 1px solid silver;
 	border-radius: 0;
-	padding: 2rem;
+	padding: 1px 0.5rem 1px 2px;
 }
 
 select option {

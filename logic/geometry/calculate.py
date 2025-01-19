@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List
+from typing import List, Callable, Optional
 
 import numpy as np
 
@@ -14,21 +14,23 @@ class Geometry:
     area: Area
     rect: Rect
 
-    @property
-    def shape(self):
-        return int(self.rect.width), int(self.rect.height)
+    def create_object_array(self, factory: Optional[Callable] = None):
+        if factory is None:
+            shape = (len(self.coordinates), )
+            return np.empty(shape, dtype=object)
+        else:
+            return np.array([factory() for _ in self.coordinates])
 
-    def create_object_array(self):
-        return np.empty(self.shape, dtype=object)
-
-    def create_pixel_indices(self):
-        w, h = self.shape
-        return np.mgrid[0:w, 0:h].reshape(2, -1).T
+    def iterate(self):
+        for coordinate in self.coordinates:
+            yield coordinate.index, coordinate.x, coordinate.y
 
 
 class GeometryMan:
     """
-    A static class that calculates the coordinates of every LED in your segments
+    A static class that calculates the coordinates of every LED in your segments.
+
+    Doesn't really have to be a class. But now it is! (´_¨｀)9
     """
 
     @staticmethod
@@ -36,14 +38,16 @@ class GeometryMan:
         coordinates = []
         area = Area()
         cursor = GeometryCursor()
+        i = 0
         for segment in segments:
             cursor.init(segment)
-            for i in range(segment.length):
+            for _ in range(segment.length):
                 area.cover(cursor)
                 coordinates.append(
                     PixelCoordinate.make(i, cursor)
                 )
                 cursor.move_next(segment, i)
+                i += 1
         return Geometry(
             coordinates,
             area,

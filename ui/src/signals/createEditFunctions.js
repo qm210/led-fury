@@ -33,7 +33,8 @@ const createEditFunctions = (editsSignal, selectedSignal) => {
             id: [patternId, key].join("."),
             patternId,
             key,
-            value
+            value,
+            at: Date.now(),
         };
         let unmatched = true;
         const edits = [...editsSignal.value];
@@ -46,7 +47,7 @@ const createEditFunctions = (editsSignal, selectedSignal) => {
         if (unmatched) {
             edits.push(edit);
         }
-        // need to assign new reference
+        // need to assign new reference, that's how signals work.
         editsSignal.value = edits;
     };
 

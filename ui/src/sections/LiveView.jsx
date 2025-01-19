@@ -1,11 +1,9 @@
-import {useSegmentGeometry, useSequenceApi} from "../api/apiHooks.js";
+import {useSequenceApi} from "../api/api.js";
 import {useWebSocket} from "../api/useWebSocket.js";
 import {useEffect, useMemo, useState} from "react";
-import {currentSetup} from "../signals/setup.js";
 import Loader from "../utils/Loader.jsx";
 import {signal} from "@preact/signals";
-import {overwriteDebug} from "./DebugConsole.jsx";
-import {currentGeometry} from "../signals/segments.js";
+import {currentGeometry} from "../signals/setup.js";
 
 
 const hover = signal({
@@ -23,22 +21,11 @@ const setHover = (segment = null, index = null, color = null) => {
 
 export const LiveView = () => {
     const {current} = useSequenceApi();
-    const view = useSegmentGeometry(currentSetup.value?.segments);
+    const {geometry, segments} = currentGeometry.value;
 
-    useEffect(() => {
-        if (!view) {
-            return;
-        }
-        currentGeometry.value =
-            view.error
-                ? {error: view.error}
-                : view.geometry;
-        overwriteDebug("Geometry", view);
-    }, [view]);
-
-    if (!view.geometry) {
+    if (!geometry) {
         return (
-            <LiveViewArea>
+            <LiveViewArea style={{background: "white"}}>
                 <div class={"flex justify-center items-center"}>
                     <Loader/>
                 </div>
@@ -47,37 +34,35 @@ export const LiveView = () => {
     }
 
     const viewbox = useMemo(() => {
-        const rect = view.geometry.rect;
+        const rect = geometry.rect;
         return [
-            rect.x - 1,
-            rect.y - 1,
-            rect.width + 1,
-            rect.height + 1,
+            rect.x - 1.5,
+            rect.y - 1.5,
+            rect.width + 2,
+            rect.height + 2,
         ].join(" ");
-    }, [view.geometry.rect])
+    }, [geometry.rect])
 
     return (
-        <LiveViewArea style={{
-            minWidth: "66vw"
-        }}>
+        <LiveViewArea>
             <svg
                 width={"100%"}
-                height={"100%"}
+                height={"50vh"}
                 viewBox={viewbox}
                 preserveAspectRatio="xMidYMid"
                 pointerEvents="all"
             >
-                {view.segments.map((segment, index) =>
+                {segments.map((segment, index) =>
                     <SegmentLiveView
                         segment={segment}
-                        geometry={view.geometry}
+                        geometry={geometry}
                         initialValues={current?.values}
                         key={index}
                     />
                 )}
             </svg>
             <HoverInfo
-                segments={view.segments}
+                segments={segments}
             />
         </LiveViewArea>
     );
@@ -130,8 +115,8 @@ const SegmentLiveView = ({segment, geometry, initialValues}) => {
     }, [initialValues]);
 
     useEffect(() => {
-        if (message?.values) {
-            setValues(message.values);
+        if (message?.rgbValues) {
+            setValues(message.rgbValues);
         }
     }, [message]);
 

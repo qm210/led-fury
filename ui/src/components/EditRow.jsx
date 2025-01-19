@@ -2,12 +2,24 @@ import Slider from "rc-slider";
 import {DragNumberInput} from "./DragNumberInput.jsx";
 import {ColorChooseRow} from "../pattern/ColorChooseRows.jsx";
 import {applyEdit, findEdit, selectedPattern} from "../signals/pattern.js";
-import {currentSetup} from "../signals/setup.js";
 import {OptionSelector} from "./OptionSelector.js";
+import {is1d} from "../signals/setup.js";
 
 
-export const EditRow = ({label, editKey, getDefault, numeric, numericY, color, select, isVector, onClickHeader}) => {
-    const dimensions = isVector && !currentSetup.value.derived.is1d ? 2 : 1;
+export const EditRow = ({
+        label,
+        editKey,
+        getDefault,
+        numeric,
+        numericY,
+        color,
+        select,
+        isVector,
+        onClickHeader,
+        getExtra
+    }) => {
+
+    const dimensions = isVector && !is1d() ? 2 : 1;
 
     const onClickHeaderCell =
         onClickHeader === undefined
@@ -20,6 +32,7 @@ export const EditRow = ({label, editKey, getDefault, numeric, numericY, color, s
             key={dim}
             editKey={[editKey, dim]}
             getDefault={getDefault}
+            getExtra={getExtra}
             header={
                 dim === 0
                     ? <td
@@ -49,11 +62,23 @@ const defaultDisplayFunc = (x) =>
             ? +(x.toFixed(3))
             : x;
 
-const EditRowForDimension = ({dimIndex, header, editKey, getDefault, numeric, color, select, hideCoordinate}) => {
+const EditRowForDimension = ({
+        dimIndex,
+        header,
+        editKey,
+        getDefault,
+        getExtra,
+        numeric,
+        color,
+        select,
+        hideCoordinate
+    }) => {
+
     const defaultValue = getDefault(selectedPattern.value, dimIndex);
     const currentValue = findEdit(editKey)?.value ?? defaultValue;
     const coordinate = hideCoordinate ? "" : (["X", "Y"][dimIndex]);
     const displayFunc = numeric?.display ?? defaultDisplayFunc;
+    const extraInfo = getExtra ? getExtra(selectedPattern.value, dimIndex): null;
 
     if (color) {
         return (
@@ -73,7 +98,12 @@ const EditRowForDimension = ({dimIndex, header, editKey, getDefault, numeric, co
                 <td>{coordinate}</td>
             }
             <td>
-                {displayFunc(defaultValue)}
+                <span>
+                    {displayFunc(defaultValue)}
+                </span>
+                <span className={"text-xs p-1"}>
+                    {extraInfo}
+                </span>
             </td>
             <td>
                 {

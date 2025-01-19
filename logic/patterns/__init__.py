@@ -13,7 +13,7 @@ class Boundary:
     min: int = 0
     max: int = None
     behaviour: BoundaryBehaviour = field(default=BoundaryBehaviour.Unbounded)
-    resize_on_segment_change = True
+    resize_on_segment_change: bool = True
 
 
 # might grow later on

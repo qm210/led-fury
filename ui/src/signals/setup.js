@@ -1,12 +1,22 @@
 import {signal} from "@preact/signals";
-import {segmentEdits} from "./segments.js";
+import {resetSetupEdits, segmentEdits} from "./segments.js";
+import {updateGeometry} from "../api/api.js";
+import {overwriteDebug} from "../sections/DebugConsole.jsx";
 
-export const lastSynchronizedSetup = signal(undefined);
+export const synchronizedSetup = signal(undefined);
 export const currentSetup = signal(undefined);
+export const currentGeometry = signal({
+    segments: null,
+    geometry: null,
+    error: null
+});
+
+export const is1d = () =>
+    currentGeometry.value?.geometry.area.y.max < 2;
 
 
 export const updateCurrentSetupFromEdits = () => {
-    const setup = structuredClone(lastSynchronizedSetup.value);
+    const setup = structuredClone(synchronizedSetup.value);
     for (const edit of segmentEdits.value) {
         const [segKey, segIndex, key] = edit.key.split(".");
         if (segKey !== "seg") {
@@ -24,24 +34,25 @@ export const updateCurrentSetupFromEdits = () => {
             console.warn("updateCurrentSetupFromEdits() can not yet handle", edit);
         }
     }
-    setup.derived = deriveInfo(setup);
     currentSetup.value = setup;
-};
+    resetSetupEdits();
 
-const deriveInfo = (setup) => {
-    // cf. what the backend calculates from the Setup for direct access
-    let maxSegmentLength = 0;
-    let totalNumberPixels = 0;
-    for (const segment of setup.segments) {
-        maxSegmentLength = Math.max(
-            maxSegmentLength,
-            segment.start + segment.length
-        );
-        totalNumberPixels += segment.length;
-    }
-    return {
-        maxSegmentLength,
-        totalNumberPixels,
-        is1d: setup.segments.length === 1 && setup.segments[0].shape === "linear"
-    };
+    return updateGeometry(setup.segments)
+        .then(res => {
+            currentGeometry.value =
+                res.error
+                    ? {
+                        ...currentGeometry.value,
+                        error: res.error,
+                    }
+                : {
+                    geometry: res.geometry,
+                    segments: res.segments,
+                    error: null,
+                };
+            if (res.error) {
+                console.warn("Could not update Geometry", res);
+            }
+            overwriteDebug("currentGeometry", currentGeometry.value);
+        });
 };

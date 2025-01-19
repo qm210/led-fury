@@ -1,12 +1,11 @@
 from contextlib import contextmanager
 from typing import Optional, List, Tuple
 
+from tornado import gen
 from tornado.ioloop import PeriodicCallback
 
 from handlers.websocket import WebSocketHandler
-from logic.color import HsvColor
-from logic.patterns import PointMotion, Boundary, BoundaryBehaviour
-from logic.patterns.pattern import Pattern, PatternType, PointPattern
+from logic.patterns.pattern import Pattern
 from model.state import SequenceState
 from model.setup import PixelSegment, ControllerSetup
 from service.UdpSender import UdpSender
@@ -20,18 +19,15 @@ CONTROLLER_PORT = 65506
 
 class SequenceMan:
     """
-    Managing the sequential UDP requests
-
-    this implements the singleton pattern, instantiate it via get_instance()
+    This is (currently) the main service of the application.
+    It's called Man because of Manager, not because of gender delusions ;)
     """
-
-    instance = None
 
     state: SequenceState
     sender: Optional[UdpSender] = None
     run: RunState
 
-    def __init__(self):
+    def __init__(self, verbose=False):
         self.setup = ControllerSetup(
             host=CONTROLLER_HOST,
             port=CONTROLLER_PORT,
@@ -39,17 +35,23 @@ class SequenceMan:
                 PixelSegment(66)
             ]
         )
-        self.state = SequenceState(self.setup)
+        self.state = SequenceState(self.setup, verbose)
         self.run = RunState()
 
-    @classmethod
-    def get_instance(cls):
-        if cls.instance is None:
-            cls.instance = SequenceMan()
-        return cls.instance
-
     def make_sender(self):
-        return UdpSender(self.setup.host, self.setup.port)
+        return UdpSender.make(self.setup)
+
+    def broadcast_colors(self):
+        no_previous_sender = self.sender is None
+        if no_previous_sender:
+            self.sender = self.make_sender()
+        self.sender.send_drgb(
+            self.state.rgb_value_list,
+            close=no_previous_sender
+        )
+        WebSocketHandler.send_message({"rgbValues": self.state.rgb_value_list})
+        if no_previous_sender:
+            self.sender = None
 
     def get_state_json(self):
         return {
@@ -74,35 +76,6 @@ class SequenceMan:
             self.run = RunState()
         self.apply_setup_change()
 
-    def init_sample_pattern(self):
-        self.state.patterns = [
-            Pattern(
-                name="Sample Point",
-                type=PatternType.Point,
-                template=PointPattern(
-                    pos=[0, 0],
-                    size=[1, 1],
-                    motion=[
-                        PointMotion(15),
-                        PointMotion()
-                    ],
-                    boundary=[
-                        Boundary(
-                            max=self.state.max_length - 1,
-                            behaviour=BoundaryBehaviour.Bounce
-                        ),
-                        Boundary(
-                            max=self.state.n_segments - 1,
-                            behaviour=BoundaryBehaviour.Wrap,
-                        )
-                    ],
-                    color=HsvColor.RandomFull(),
-                    hue_delta=360,
-                ),
-                fade=0.95
-            )
-        ]
-
     def shuffle_pattern_colors(self):
         for pattern, instance in self.state.patterns_with_instances(self.run):
             instance.state.color.randomize(
@@ -116,10 +89,10 @@ class SequenceMan:
         return self.run.process is not None
 
     def run_sequence_step(self):
-        self.state.proceed_and_render(self.run)
+        self.state.proceed(self.run)
+        self.state.render(self.run)
+        self.broadcast_colors()
         self.run.update_times()
-        self.sender.send_drgb(self.state.rgb_value_list, close=False)
-        WebSocketHandler.send_message({"values": self.state.rgb_value_list})
 
     def start_process(self):
         self.run.process = PeriodicCallback(self.run_sequence_step, self.state.update_ms)
@@ -130,7 +103,7 @@ class SequenceMan:
         if self.running:
             return
         self.sender = self.make_sender()
-        self.run.init_times()
+        self.run.initialize()
         self.start_process()
 
     def stop_sequence(self):
@@ -140,6 +113,23 @@ class SequenceMan:
         if self.sender is not None:
             self.sender.close()
             self.sender = None
+
+    @gen.coroutine
+    def seek_in_sequence(self, second: float):
+        if self.running:
+            self.stop_sequence()
+        self.state.seek_second = second
+        self.run.initialize(seek=True)
+
+        cursor = 0
+        while cursor < second:
+            self.state.proceed(self.run)
+            self.run.update_times(second=cursor)
+            cursor += self.state.update_ms
+
+        self.state.render(self.run)
+        self.broadcast_colors()
+        return self.state.rgb_value_list
 
     @contextmanager
     def sequence_paused_if_running(self):

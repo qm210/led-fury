@@ -6,4 +6,8 @@
     .link {
         @apply underline text-blue-500 hover:text-blue-300 cursor-pointer
     }
+
+    .full-column {
+        @apply w-full h-full flex flex-col items-center justify-evenly gap-4 p-8
+    }
 }

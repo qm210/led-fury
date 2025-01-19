@@ -1,6 +1,7 @@
 {
     "state": {
         "update_ms": 50,
+        "bytesize": 3,
         "sequence_length": 10,
         "sequence_loops": true,
         "sequence_frames": 20,
@@ -8,8 +9,8 @@
             {
                 "template": {
                     "pos": [
-                        0,
-                        0
+                        1.0,
+                        1.0
                     ],
                     "size": [
                         1,
@@ -17,26 +18,30 @@
                     ],
                     "motion": [
                         {
-                            "vel": 15,
+                            "vel": 1.0,
                             "sign": 1,
-                            "acc": 0
+                            "acc": 0,
+                            "type": "linear"
                         },
                         {
-                            "vel": 0,
+                            "vel": 1.0,
                             "sign": 1,
-                            "acc": 0
+                            "acc": 0,
+                            "type": "linear"
                         }
                     ],
                     "boundary": [
                         {
                             "min": 0,
-                            "max": 65,
-                            "behaviour": "bounce"
+                            "max": 2.0,
+                            "behaviour": "bounce",
+                            "resize_on_segment_change": true
                         },
                         {
                             "min": 0,
-                            "max": 0,
-                            "behaviour": "wrap"
+                            "max": 2.0,
+                            "behaviour": "wrap",
+                            "resize_on_segment_change": true
                         }
                     ],
                     "color": {
@@ -44,7 +49,9 @@
                         "s": 100,
                         "v": 100
                     },
-                    "hue_delta": 360
+                    "hue_delta": 360,
+                    "sat_delta": 0,
+                    "val_delta": 0
                 },
                 "type": "point",
                 "id": "20250105-021518",
@@ -56,21 +63,99 @@
                 "max_instances": 10
             }
         ],
-        "max_length": 66,
-        "n_segments": 1,
-        "n_pixels": 66,
         "selected_frame": null,
         "selected_pos": [],
-        "selected_pattern": null
+        "selected_pattern": null,
+        "max_length": 9,
+        "n_segments": 1,
+        "n_pixels": 9,
+        "geometry": {
+            "coordinates": [
+                {
+                    "x": 0,
+                    "y": 0,
+                    "index": 0
+                },
+                {
+                    "x": 1.0,
+                    "y": 0.0,
+                    "index": 1
+                },
+                {
+                    "x": 2.0,
+                    "y": 0.0,
+                    "index": 2
+                },
+                {
+                    "x": 0,
+                    "y": 1.0,
+                    "index": 3
+                },
+                {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "index": 4
+                },
+                {
+                    "x": 2.0,
+                    "y": 1.0,
+                    "index": 5
+                },
+                {
+                    "x": 0,
+                    "y": 2.0,
+                    "index": 6
+                },
+                {
+                    "x": 1.0,
+                    "y": 2.0,
+                    "index": 7
+                },
+                {
+                    "x": 2.0,
+                    "y": 2.0,
+                    "index": 8
+                }
+            ],
+            "area": {
+                "x": {
+                    "min": 0,
+                    "max": 2.0
+                },
+                "y": {
+                    "min": 0,
+                    "max": 2.0
+                }
+            },
+            "rect": {
+                "x": 0,
+                "y": 0,
+                "width": 3.0,
+                "height": 3.0
+            }
+        },
+        "verbose": true
     },
     "setup": {
         "host": "192.168.178.60",
         "port": 65506,
         "segments": [
             {
-                "length": 66,
-                "start": 0
+                "length": 9,
+                "distance": 1,
+                "shape": "rect",
+                "alternating": false,
+                "divisions": 3,
+                "origin": {
+                    "x": 0,
+                    "y": 0
+                },
+                "direction": {
+                    "x": 1.0,
+                    "y": 0.0
+                }
             }
-        ]
+        ],
+        "id": "unnamed_setup"
     }
 }

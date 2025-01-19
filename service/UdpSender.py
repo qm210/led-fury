@@ -1,7 +1,12 @@
 import asyncio
 import socket
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from model.setup import ControllerSetup
 
 
+# WLED constants
 UDP_MODE_WARLS = 1
 UDP_MODE_DRGB = 2
 
@@ -12,6 +17,13 @@ class UdpSender:
         self.address = (host, port)
         self.socket = None
 
+    @classmethod
+    def make(cls, setup: "ControllerSetup"):
+        return cls(
+            host=setup.host,
+            port=setup.port
+        )
+
     def send(self, values, close=True):
         message_bytes = bytearray(values)
         if self.socket is None:
@@ -21,7 +33,10 @@ class UdpSender:
             self.close()
 
     def send_drgb(self, values, timeout_sec=1, close=True):
-        self.send([UDP_MODE_DRGB, timeout_sec, *values], close=close)
+        self.send(
+            [UDP_MODE_DRGB, timeout_sec, *values],
+            close=close
+        )
 
     def close(self):
         if self.socket is not None:

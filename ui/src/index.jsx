@@ -1,22 +1,25 @@
 import { render } from 'preact';
-import {LocationProvider, Router, Route} from 'preact-iso';
+import {LocationProvider} from 'preact-iso';
 import {QueryClient, QueryClientProvider} from "@preact-signals/query";
-
-import EditorPage from './sections/MainEditor.jsx';
-import { NotFound } from './sections/_404.jsx';
-
 import {Header} from "./sections/Header.jsx";
-import Loader from "./utils/Loader.jsx";
-import {Suspense} from "react";
+import EditorPage from './sections/MainEditor.jsx';
+import ErrorBoundary from "./sections/ErrorBoundary.jsx";
 
-import './styles/index.css';
-import './styles/components.css';
 import './styles/dist.css'; // tailwind build, generate via "npm run tailwind:build"
 import 'rc-slider/assets/index.css';
-import ErrorBoundary from "./sections/ErrorBoundary.js";
+import './styles/index.css';
+import './styles/components.css';
+import QueryInitializer from "./sections/QueryInitializer.jsx";
 
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+	defaultOptions: {
+		queries: {
+			timeout: 5000
+		}
+	}
+});
+
 
 const App = () =>
 	<LocationProvider>
@@ -30,18 +33,9 @@ const Layout = () =>
 		<Header/>
 		<main>
 			<ErrorBoundary>
-				<Suspense fallback={<Loader/>}>
-					<Router>
-						<Route
-							path={"/"}
-							component={EditorPage}
-						/>
-						<Route
-							default
-							component={NotFound}
-						/>
-					</Router>
-				</Suspense>
+				<QueryInitializer>
+					<EditorPage/>
+				</QueryInitializer>
 			</ErrorBoundary>
 		</main>
 	</>;

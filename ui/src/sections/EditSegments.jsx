@@ -1,4 +1,4 @@
-import {currentSetup, lastSynchronizedSetup} from "../signals/setup.js";
+import {currentSetup, synchronizedSetup} from "../signals/setup.js";
 import {applySegmentEdit} from "../signals/segments.js";
 import {Checkbox} from "../components/Checkbox.jsx";
 import {SpinNumberInput} from "../components/SpinNumberInput.jsx";
@@ -76,7 +76,7 @@ const EditSegmentRows = ({segment, index, segments}) => {
                         applySegmentEdit(makeKey("len"), value)
                     }
                     min={1}
-                    resetValue={lastSynchronizedSetup.value.segments[index].length}
+                    resetValue={synchronizedSetup.value?.segments[index].length}
                 />
             </td>
             <td>

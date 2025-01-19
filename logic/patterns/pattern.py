@@ -89,9 +89,8 @@ class Pattern:
         )
 
     def apply_fade(self, pixels: HsvColorArray):
-        for line in pixels:
-            for color in line:
-                color.scale_v(self.fade)
+        for color in pixels:
+            color.scale_v(self.fade)
 
     def update_from_edit_json(self, key: str, dim: int = 0, subkeys: list = None, value: Any = None):
         if self.type is not PatternType.Point:

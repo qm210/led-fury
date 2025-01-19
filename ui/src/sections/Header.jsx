@@ -1,7 +1,7 @@
 import { useLocation } from 'preact-iso';
 import {useWebSocket} from "../api/useWebSocket.js";
 import {SquarePower} from "lucide-preact";
-import {useOverallMutations} from "../api/apiHooks.js";
+import {shutdownBackend} from "../api/api.js";
 
 export function Header() {
 	const { url } = useLocation();
@@ -25,6 +25,10 @@ const WebsocketInfo = () => {
 		? {
 			color: "#BD9",
 			text: "Socket connected."
+		}
+		: ws.pending ? {
+			color: "#AAA",
+			text: "Connecting..."
 		} : {
 			color: "#FAA",
 			text: "Socket disconnected!"
@@ -35,27 +39,17 @@ const WebsocketInfo = () => {
 			title={ws.url}
 			onClick={() => console.log(ws)}
 		>
-			{
-				ws.pending
-					? "..."
-					: (
-						<span style={{color: props.color}}>
-							{props.text}
-						</span>
-					)
-			}
+			<span style={{color: props.color}}>
+				{props.text}
+			</span>
 		</div>
 	);
 };
 
-const ShutdownButton = () => {
-	const {shutdown} = useOverallMutations();
-	return (
-		<button class="p-3"
-			onClick = {() => shutdown()}
-			title = "Shuts down the backend, i.e. also the frontend dies."
-		>
-			<SquarePower color="#FF8888"/>
-		</button>
-	)
-};
+const ShutdownButton = () =>
+	<button
+		onClick = {shutdownBackend}
+		title = "Shuts down the whole aplication. No more fun."
+	>
+		<SquarePower color="#FF8888"/>
+	</button>;

@@ -9,6 +9,8 @@ const ws = signal({
 });
 const wsMessage = signal(null);
 
+const now = () => (new Date()).toLocaleTimeString();
+
 export const useWebSocket = () => {
 
     useEffect(() => {
@@ -16,7 +18,7 @@ export const useWebSocket = () => {
             return;
         }
 
-        console.log("Opening Websocket", ws.value);
+        console.log("Opening Websocket to", websocketEndpoint);
         ws.value = {
             connection: null,
             pending: true,
@@ -27,14 +29,14 @@ export const useWebSocket = () => {
                 connection: socket,
                 pending: false,
             };
-            console.info("Websocket Opened", new Date(), event)
+            console.info("Websocket Opened at", now())
         };
         socket.onclose = (event) => {
             ws.value = {
                 connection: null,
                 pending: false,
             };
-            console.info("Websocket Closed", new Date(), event)
+            console.info("Websocket Closed", now(), event)
         };
         socket.onerror = (error) => {
             console.error("WebSocket Error", error);
