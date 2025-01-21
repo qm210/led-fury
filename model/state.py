@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from math import sqrt
 from typing import List, Optional, Tuple
 
 import numpy as np
@@ -36,7 +37,8 @@ class SequenceState:
     n_pixels: int = 0
     geometry: Optional[Geometry] = None
 
-    verbose: bool = False
+    # TODO: make toggleable via CLI flag or even via frontend
+    verbose: bool = True
 
     def __init__(self, setup: ControllerSetup, verbose: bool = False):
         self.patterns = []
@@ -101,10 +103,6 @@ class SequenceState:
             for instance in run.pattern_instances[pattern.id]:
                 yield pattern, instance
 
-    def proceed(self, run: RunState):
-        for pattern in self.patterns:
-            pattern.proceed_step(run, self)
-
     def render(self, run: RunState):
         self._rgb_array[:] = 0
         for coordinate in self.geometry.coordinates:
@@ -112,8 +110,8 @@ class SequenceState:
             index = self.bytesize * pixel_index
             for _, instance in self.patterns_with_instances(run):
                 pixel = instance.pixels[pixel_index]
-                mix = 0.01 * pixel.v
-                rgb = pixel.to_rgb()
+                mix = sqrt(0.01 * pixel.v) if pixel.v > 0 else 0
+                rgb = pixel.to_raw_rgb()
                 for b in range(self.bytesize):
                     try:
                         self._rgb_array[index + b] = (
@@ -127,7 +125,11 @@ class SequenceState:
                     print(f"-- Fill into RGB array: Pixel {pixel_index} => index {index}: color={rgb}, " +
                                   f"mix {mix}, result={self._rgb_array[index:index + self.bytesize]}")
 
-        self._rgb_array = np.clip(self._rgb_array, 0, 255).round()
+        self._rgb_array = np.clip(
+            np.multiply(self._rgb_array, 255),
+            0,
+            255
+        ).round()
         self._rgb_list = self._rgb_array.astype(np.uint8).tolist()
 
     @property

@@ -59,32 +59,31 @@ export const useSequenceApi = (options = {}) => {
         ...options,
     }));
 
-    const start = useMutation$(() => ({
-        mutationFn: () => axios.post("/sequence/start"),
-    }));
+    const start = () => axios.post("/sequence/start");
 
-    const stop = useMutation$(() => ({
-        mutationFn: () => axios.post("/sequence/stop"),
-    }));
+    const stop = () => axios.post("/sequence/stop");
 
-    const seek = useMutation$(() => ({
-        mutationFn: (second) => axios.post("/sequence/seek", {second})
-    }))
+    const seek = (second) =>
+        axios.post("/sequence/seek", {second});
 
     return {
         current: query.data?.data,
         readCurrent: query.refetch,
         start: start.mutateAsync,
-        stop: stop.mutateAsync,
-        seekTime: seek.mutateAsync,
+        stop,
+        seek,
     };
 };
 
 export const postPatternEdits = (patternEdits) =>
-    axios.post(
-        `/pattern/edits`,
-        patternEdits
-    );
+    axios.post("/pattern/edits", patternEdits);
+
+export const importGifPattern = async (file) => {
+    // "file" must come from e.g. document.getElementById('fileInput').files[0];
+    const formData = new FormData();
+    formData.append('file', file);
+    return axios.post("/pattern/gif", formData);
+};
 
 export const updateGeometry = async (segments) => {
     // useQuery$ and useMutation$ always want to do more than necessary,

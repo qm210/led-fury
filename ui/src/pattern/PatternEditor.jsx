@@ -1,10 +1,17 @@
 import {EditRow} from "../components/EditRow.jsx";
 import {ColorVariationCell} from "./ColorChooseRows.jsx";
-import {hoveredPattern, synchronizedPatterns, patternEdits, selectedPattern} from "../signals/pattern.js";
+import {
+    hoveredPattern,
+    synchronizedPatterns,
+    patternEdits,
+    selectedPattern,
+    hoveredPatternId, selectedPatternId
+} from "../signals/pattern.js";
 import * as Lucide from "lucide-preact";
 import {ActionButtons} from "../components/ActionButtons.jsx";
 import {INFINITY, PLUSMINUS, THIN_SPACE, TRIANGLE_RIGHT} from "../utils/constants.jsx";
 import {currentGeometry} from "../signals/setup.js";
+import {importGifPattern} from "../api/api.js";
 
 
 export const PatternEditor = () =>
@@ -55,13 +62,25 @@ const EditPatterns = () => {
                 actions={[{
                     element: Lucide.CopyPlus,
                     tooltip: `Copy Pattern "${selectedPattern.value?.name}"`,
-                    disabled: !selectedPattern.value
+                    disabled: !selectedPattern.value,
+                    onClick: () => {
+                        alert("not implemented yet...")
+                    }
+                }, {
+                    element: Lucide.ImagePlus,
+                    tooltip: "Add GIF Pattern",
+                    onClick: () =>
+                        importGifPattern()
+                            .then(console.log)
                 }, {
                     element: Lucide.Trash2,
                     tooltip: `Delete Pattern "${selectedPattern.value?.name}"`,
                     disabled: !selectedPattern.value || patterns.length < 2,
                     onClick: () => {
-                        alert("hey!");
+                        alert("not implemented yet...");
+                    },
+                    style: {
+                        marginLeft: "auto"
                     }
                 }]}
             />
@@ -70,8 +89,8 @@ const EditPatterns = () => {
 };
 
 const PatternListEntry = ({pattern}) => {
-    const hovered = hoveredPattern.value?.id === pattern.id;
-    const selected = selectedPattern.value?.id === pattern.id;
+    const hovered = hoveredPatternId.value === pattern.id;
+    const selected = selectedPatternId.value === pattern.id;
 
     const style = {
         backgroundColor:
@@ -96,10 +115,10 @@ const PatternListEntry = ({pattern}) => {
             className={"cursor-pointer px-6"}
             style={style}
             onMouseEnter={() => {
-                hoveredPattern.value = pattern;
+                hoveredPatternId.value = pattern.id;
             }}
             onMouseLeave={() => {
-                hoveredPattern.value = null;
+                hoveredPatternId.value = null;
             }}
         >
             {pattern.name}

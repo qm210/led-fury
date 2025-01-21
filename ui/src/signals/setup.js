@@ -15,7 +15,14 @@ export const is1d = () =>
     currentGeometry.value?.geometry.area.y.max < 2;
 
 
-export const updateCurrentSetupFromEdits = () => {
+export const updateCurrentSetupFromEdits = async () => {
+    if (segmentEdits.value.length === 0) {
+        currentSetup.value = synchronizedSetup.value;
+        if (!!currentGeometry.value.geometry) {
+            return;
+        }
+    }
+
     const setup = structuredClone(synchronizedSetup.value);
     for (const edit of segmentEdits.value) {
         const [segKey, segIndex, key] = edit.key.split(".");
@@ -37,22 +44,20 @@ export const updateCurrentSetupFromEdits = () => {
     currentSetup.value = setup;
     resetSetupEdits();
 
-    return updateGeometry(setup.segments)
-        .then(res => {
-            currentGeometry.value =
-                res.error
-                    ? {
-                        ...currentGeometry.value,
-                        error: res.error,
-                    }
-                : {
-                    geometry: res.geometry,
-                    segments: res.segments,
-                    error: null,
-                };
-            if (res.error) {
-                console.warn("Could not update Geometry", res);
+    const res = await updateGeometry(setup.segments);
+    currentGeometry.value =
+        res.error
+            ? {
+                ...currentGeometry.value,
+                error: res.error,
             }
-            overwriteDebug("currentGeometry", currentGeometry.value);
-        });
+        : {
+            geometry: res.geometry,
+            segments: res.segments,
+            error: null,
+        };
+    if (res.error) {
+        console.warn("Could not update Geometry", res);
+    }
+    overwriteDebug("currentGeometry", currentGeometry.value);
 };

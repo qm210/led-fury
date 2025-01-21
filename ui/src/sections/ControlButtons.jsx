@@ -25,7 +25,7 @@ export const ControlButtons = () => {
                 actions={[
                     {
                         element: Lucide.ListRestart,
-                        onClick: synchronize,
+                        onClick: () => synchronize(true),
                         tooltip: "Synchronize with Backend",
                     }, {
                         element: Lucide.Play,
@@ -40,7 +40,10 @@ export const ControlButtons = () => {
                     }]}
             />
             <div class={"flex-1"}>
-                <TimeSeeker/>
+                <TimeSeeker
+                    label={"Seek:"}
+                    tooltip={"Jump to given second."}
+                />
             </div>
             <ActionButtons
                 actions={[{
@@ -58,14 +61,14 @@ export const ControlButtons = () => {
     );
 };
 
-const TimeSeeker = () => {
-    const {seekTime} = useSequenceApi();
+const TimeSeeker = ({label, tooltip}) => {
+    const {seek} = useSequenceApi();
     const [second, setSecond] = useState(currentSecond.value);
 
     return (
-        <div class={"flex gap-2 items-center"}>
+        <div class={"flex gap-2 items-center border border-black pl-2"}>
             <div>
-                Seek:
+                {label}
             </div>
             <div class={"flex flex-col justify-stretch h-full"}>
                 <SpinNumberInput
@@ -77,12 +80,17 @@ const TimeSeeker = () => {
             </div>
             <ActionButton
                 onClick={() =>
-                    seekTime(second)
-                        .then(second => {
+                    synchronize()
+                        .then(() =>
+                            seek(second)
+                        )
+                        .then(res => {
+                            console.log("Seek Response:", res.data);
                             currentSecond.value = second;
                         })
                 }
-                tooltip={"Jump to given second."}
+                tooltip={tooltip}
+                style={{borderWidth: "0 0 0 1px"}}
             >
                 <Lucide.Goal/>
             </ActionButton>

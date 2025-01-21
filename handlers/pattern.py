@@ -1,3 +1,4 @@
+from tornado import gen
 from tornado.httpclient import HTTPError
 
 from app.handler import ManHandler
@@ -31,7 +32,18 @@ class PatternEditHandler(ManHandler):
         })
 
 
+class PatternGifHandler(ManHandler):
+    @gen.coroutine
+    def post(self):
+        # TODO: get file from upload
+        pattern = yield self.man.import_gif_pattern("./sample.gif")
+        # self.write(pattern)
+
+
 class PatternHandler(ManHandler):
+    """
+    not used anymore, I believe (TODO: check that.)
+    """
     def get(self, id):
         self.write(
             self.man.state.get_pattern(id)

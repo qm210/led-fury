@@ -144,7 +144,7 @@ export const DebugConsole = () => {
                     Segments
                 </span>
                 <button
-                    class={"ml-auto px-2"}
+                    class={"ml-auto small-icon-button"}
                     onClick = {() =>
                         setCollapsed(state => !state)
                     }

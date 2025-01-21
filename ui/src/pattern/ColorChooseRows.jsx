@@ -38,7 +38,7 @@ export const ColorChooseRow = ({editKey, header, currentValue, defaultValue}) =>
                     isOpen={popupOpen}
                     onClickOutside={() => setPopupOpen(false)}
                     content={
-                        <div class={"bg-white border-black border rounded-md p-2 opacity-60 flex flex-col items-center gap"}>
+                        <div class={"bg-white border-black border rounded-md p-2 flex flex-col items-center gap"}>
                             <div>
                                 This is the old value.
                             </div>

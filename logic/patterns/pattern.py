@@ -1,26 +1,21 @@
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Union, Optional, TYPE_CHECKING, Any
+from typing import Optional, Any, Union
 
-from logic.color import HsvColorArray, HsvColor
-from logic.patterns import BoundaryBehaviour
-from logic.patterns.PointPattern import PointPattern, PointPatternState
-from logic.patterns.instance import PatternInstance
+from logic.color import HsvColor
+from logic.patterns import BoundaryBehaviour, GifPattern
+from logic.patterns.PointPattern import PointPattern
 from logic.time import current_timestamp
-
-if TYPE_CHECKING:
-    from model.state import SequenceState
-    from service.RunState import RunState
 
 
 class PatternType(Enum):
     Point = "point"
+    Gif = "gif"
 
 
 @dataclass
 class Pattern:
-    # extend this Union when more pattern types exist
-    template: Union[PointPattern]
+    template: Union[PointPattern, GifPattern]
     type: PatternType = PatternType.Point
 
     id: str = field(default_factory=current_timestamp)
@@ -55,42 +50,6 @@ class Pattern:
         if stored.get("max_instances") is not None:
             result.max_instances = stored["max_instances"]
         return result
-
-    def proceed_step(self, run: "RunState", state: "SequenceState"):
-        if run.elapsed_beyond(self.stop_sec):
-            if run.pattern_instances[self.id]:
-                del run.pattern_instances[self.id]
-            return
-
-        if run.just_elapsed(self.start_sec):
-            self.spawn_instance(run, state)
-
-        # TODO: implement respawn_sec with respect to max_instances
-
-        for instance in run.pattern_instances[self.id]:
-            self.apply_fade(instance.pixels)
-            instance.proceed_motion(run)
-            instance.render(state)
-
-    def spawn_instance(self, run: "RunState", state: "SequenceState"):
-        instances = run.pattern_instances[self.id]
-        if len(instances) >= self.max_instances:
-            return
-        # TODO: would distinguish types here, but there is none other
-        instance_state = PointPatternState.init_from(self.template)
-        run.pattern_instances[self.id].append(
-            PatternInstance(
-                state=instance_state,
-                template=self.template,
-                pixels=state.new_pixel_array(),
-                pattern_id=self.id,
-                spawned_sec=run.current_sec,
-            )
-        )
-
-    def apply_fade(self, pixels: HsvColorArray):
-        for color in pixels:
-            color.scale_v(self.fade)
 
     def update_from_edit_json(self, key: str, dim: int = 0, subkeys: list = None, value: Any = None):
         if self.type is not PatternType.Point:

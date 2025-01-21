@@ -1,6 +1,6 @@
 import {useState, useEffect, Suspense} from "preact/compat";
 import Loader from "../utils/Loader.jsx";
-import {synchronizedPatterns, selectedPattern} from "../signals/pattern.js";
+import {synchronizedPatterns, selectedPattern, selectedPatternId} from "../signals/pattern.js";
 import {loadSetupFromStorage, segmentEdits} from "../signals/segments.js";
 import {synchronizedSetup, updateCurrentSetupFromEdits} from "../signals/setup.js";
 import {useOverallState} from "../api/api.js";
@@ -27,9 +27,7 @@ const QueryFetcher = ({children}) => {
             return;
         }
         synchronizedPatterns.value = data.patterns;
-        selectedPattern.value = data.patterns.find(
-            p => p.id === data.selected?.pattern
-        ) ?? data.patterns[0];
+        selectedPatternId.value = data.selected?.pattern ?? data.patterns[0]?.id ?? null;
     }, [data.patterns])
 
     useEffect(() => {

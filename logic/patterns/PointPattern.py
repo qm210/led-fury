@@ -1,6 +1,6 @@
 from copy import deepcopy
 from dataclasses import dataclass, field
-from math import exp
+from math import exp, sqrt
 from typing import List, TYPE_CHECKING
 
 from logic.color import HsvColor
@@ -132,14 +132,14 @@ class PointPatternState:
     def get_intensity(self, x, y):
         def delta(dim):
             coord = y if dim == 1 else x
-            return abs(coord - self.pos[dim]) / self.size[dim]
+            return sqrt(abs(coord - self.pos[dim]) / self.size[dim])
 
         power = [
             delta(dim)
             for dim in range(len(self.pos))
         ]
-        # exponential:
         return exp(-sum(power))
+
         # TODO: offer different modes:
         # power_theta = 1 if max(x_power, y_power) <= 1 else 0
         # power_gauss = exp(-x_power*x_power - y_power*y_power)

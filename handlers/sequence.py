@@ -25,7 +25,12 @@ class SequenceSeekHandler(ManHandler):
         body = self.body()
         if "second" not in body:
             return HTTPError(422, "\"second\" missing in request body.")
-        yield self.man.seek_in_sequence(body["second"])
+        second = yield self.man.seek_in_sequence(body["second"])
+        self.write({
+            "currentSecond": second,
+            "rgbValues": self.man.state.rgb_value_list,
+            "patternInstances": self.man.run.pattern_instances
+        })
 
 
 class SequenceInfoHandler(ManHandler):

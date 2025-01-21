@@ -3,11 +3,18 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from enum import Enum
 from time import perf_counter
-from typing import Optional, List
+from typing import Optional, List, TYPE_CHECKING
 
 from tornado.ioloop import PeriodicCallback
 
+from logic.color import apply_fade, HsvColorArray
+from logic.patterns.PointPattern import PointPatternState
 from logic.patterns.instance import PatternInstance
+
+if TYPE_CHECKING:
+    from service.SequenceMan import SequenceMan
+    from model.state import SequenceState
+    from logic.patterns.pattern import Pattern
 
 
 class RunMode(Enum):
@@ -25,10 +32,12 @@ class RunState:
     mode: RunMode = field(default=RunMode.Run)
 
     def initialize(self, seek=False):
-        self.start_sec = perf_counter()
+        self.mode = RunMode.Seek if seek else RunMode.Run
+        self.start_sec = 0 if seek else perf_counter()
         self.current_sec = 0
         self.previous_sec = None
-        self.mode = RunMode.Seek if seek else RunMode.Run
+        self.process = None
+        self.pattern_instances.clear()
 
     def update_times(self, second=None):
         if second is None:
@@ -55,3 +64,40 @@ class RunState:
 
     def to_json(self):
         return json.dumps(self.__dict__, default=str)
+
+    def start_sequence_process(self, manager: "SequenceMan"):
+        self.process = PeriodicCallback(manager.run_sequence_step, manager.state.update_ms)
+        self.process.start()
+
+    def proceed(self, state: "SequenceState"):
+        for pattern in state.patterns:
+            if self.elapsed_beyond(pattern.stop_sec):
+                if self.pattern_instances[pattern.id]:
+                    del self.pattern_instances[pattern.id]
+                return
+
+            if self.just_elapsed(pattern.start_sec):
+                self.spawn_instance(pattern, state.new_pixel_array())
+
+            # TODO: implement respawn_sec with respect to max_instances
+
+            for instance in self.pattern_instances[pattern.id]:
+                apply_fade(instance.pixels, pattern.fade)
+                instance.proceed_motion(self)
+                instance.render(state)
+
+    def spawn_instance(self, pattern: "Pattern", empty_pixels: HsvColorArray):
+        instances = self.pattern_instances[pattern.id]
+        if len(instances) >= pattern.max_instances:
+            return
+        # TODO: would distinguish types here, but there is none other
+        instance_state = PointPatternState.init_from(pattern.template)
+        self.pattern_instances[pattern.id].append(
+            PatternInstance(
+                state=instance_state,
+                template=pattern.template,
+                pixels=empty_pixels,
+                pattern_id=pattern.id,
+                spawned_sec=self.current_sec,
+            )
+        )

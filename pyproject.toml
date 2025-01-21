@@ -9,6 +9,7 @@ readme = "README.md"
 python = "^3.11"
 tornado =  "^6.4.2"
 numpy = "^2.2.1"
+pillow = "^11.1.0"
 
 [build-system]
 requires = ["poetry-core"]

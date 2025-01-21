@@ -4,17 +4,26 @@ import {useEffect, useMemo, useState} from "react";
 import Loader from "../utils/Loader.jsx";
 import {signal} from "@preact/signals";
 import {currentGeometry} from "../signals/setup.js";
+import {calculateCssColor, isColorBright} from "../utils/colors.js";
 
 
 const hover = signal({
     segment: null,
-    pixel: null,
+    pixel: {
+        index: null,
+        color: null,
+        isBright: false,
+    },
 });
 
 const setHover = (segment = null, index = null, color = null) => {
     hover.value = {
         segment,
-        pixel: {index, color}
+        pixel: {
+            index,
+            color,
+            isBright: isColorBright(color),
+        }
     };
 };
 
@@ -96,7 +105,8 @@ const HoverInfo = ({segments}) => {
         <div className={"absolute right-0 bottom-0 p-4"}>
              <span className={"p-2"}
                    style={{
-                       backgroundColor: hover.value.pixel?.color ?? "magenta"
+                       backgroundColor: hover.value.pixel?.color,
+                       color: hover.value.pixel?.isBright ? "black" : "white"
                    }}
              >
                 {info}
@@ -139,23 +149,8 @@ const SegmentLiveView = ({segment, geometry, initialValues}) => {
     </>;
 };
 
-const calculateCssColor = (index, segment, values) => {
-    if (index < segment.start || index > segment.start + segment.length) {
-        return "none";
-    }
-    if (!values || values.length === 0) {
-        return "black";
-    }
-    const rgb = values?.slice(3 * index, 3 * index + 3);
-    return `rgba(${rgb.join(',')},1)`;
-};
-
-const Pixel = ({
-                   segment, values, pixel
-               }) => {
-
+const Pixel = ({segment, values, pixel}) => {
     const color = calculateCssColor(pixel.index, segment, values);
-
     return (
         <g
             onMouseEnter={() => setHover(segment, pixel.index, color)}
@@ -172,27 +167,26 @@ const Pixel = ({
             />
             <PixelLabel
                 pixel={pixel}
+                hide={pixel.index === hover.value?.pixel.index}
             />
         </g>
     );
 };
 
-const PixelLabel = ({pixel, isHovered}) => {
-
-    if (!pixel) {
+const PixelLabel = ({pixel, isHovered, hide}) => {
+    if (!pixel || hide) {
         return null;
     }
-
     return (
         <text
             fill={"white"}
             stroke={"grey"}
-            strokeWidth={0.03}
+            strokeWidth={0.02}
             fillOpacity={isHovered ? 1 : 0.4}
-            strokeOpacity={isHovered ? 0.5 : 0}
-            x={pixel.x + 0.15}
+            strokeOpacity={isHovered ? 0.8 : 0}
+            x={pixel.x + 0.25}
             y={pixel.y - 0.5 + 0.95}
-            fontSize={0.3}
+            fontSize={isHovered ? 0.45 : 0.3}
             textAnchor={"middle"}
         >
             {pixel.index + 1}

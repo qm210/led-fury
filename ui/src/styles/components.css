@@ -68,3 +68,8 @@ tr.segment-row > td:first-of-type {
 tr.segment-row:not(.details) > td {
     padding-top: 0.25rem;
 }
+
+.small-icon-button {
+    border-color: #0003;
+    padding: 1px 0 1px 1px;
+}

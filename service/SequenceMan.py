@@ -5,7 +5,8 @@ from tornado import gen
 from tornado.ioloop import PeriodicCallback
 
 from handlers.websocket import WebSocketHandler
-from logic.patterns.pattern import Pattern
+from logic.patterns.GifPattern import GifPattern
+from logic.patterns.pattern import Pattern, PatternType
 from model.state import SequenceState
 from model.setup import PixelSegment, ControllerSetup
 from service.UdpSender import UdpSender
@@ -77,6 +78,7 @@ class SequenceMan:
         self.apply_setup_change()
 
     def shuffle_pattern_colors(self):
+        print("shuffle pattern colors because it is fun.")
         for pattern, instance in self.state.patterns_with_instances(self.run):
             instance.state.color.randomize(
                 h=pattern.template.hue_delta,
@@ -89,14 +91,10 @@ class SequenceMan:
         return self.run.process is not None
 
     def run_sequence_step(self):
-        self.state.proceed(self.run)
+        self.run.proceed(self.state)
         self.state.render(self.run)
         self.broadcast_colors()
         self.run.update_times()
-
-    def start_process(self):
-        self.run.process = PeriodicCallback(self.run_sequence_step, self.state.update_ms)
-        self.run.process.start()
 
     def start_sequence(self):
         self.shuffle_pattern_colors()
@@ -104,32 +102,35 @@ class SequenceMan:
             return
         self.sender = self.make_sender()
         self.run.initialize()
-        self.start_process()
+        self.run.start_sequence_process(self)
 
     def stop_sequence(self):
         if self.running:
             self.run.process.stop()
-        self.run = RunState()
+        self.run.initialize()
         if self.sender is not None:
             self.sender.close()
             self.sender = None
 
     @gen.coroutine
-    def seek_in_sequence(self, second: float):
+    def seek_in_sequence(self, second: float, broadcast: bool = True):
         if self.running:
             self.stop_sequence()
         self.state.seek_second = second
         self.run.initialize(seek=True)
 
         cursor = 0
-        while cursor < second:
-            self.state.proceed(self.run)
+        dt = 0.001 * self.state.update_ms
+        while cursor <= second:
+            self.run.proceed(self.state)
             self.run.update_times(second=cursor)
-            cursor += self.state.update_ms
+            cursor += dt
+        cursor -= dt
 
         self.state.render(self.run)
-        self.broadcast_colors()
-        return self.state.rgb_value_list
+        if broadcast:
+            self.broadcast_colors()
+        return cursor
 
     @contextmanager
     def sequence_paused_if_running(self):
@@ -139,7 +140,7 @@ class SequenceMan:
             self.run.process.stop()
         yield
         if was_running:
-            self.start_process()
+            self.run.start_sequence_process(self)
 
     def apply_setup_change(self, segments: Optional[List[PixelSegment]] = None):
         with self.sequence_paused_if_running():
@@ -161,3 +162,20 @@ class SequenceMan:
             return [], []
         with self.sequence_paused_if_running():
             return self.state.apply_pattern_edit_jsons(edits)
+
+    @gen.coroutine
+    def import_gif_pattern(self, filename):
+        template = yield GifPattern.import_from(filename)
+        pattern = Pattern(
+            template=template,
+            type=PatternType.Gif,
+            name=filename,
+            fade=0,
+            max_instances=1,
+        )
+        for index, pattern in enumerate(self.state.patterns):
+            if pattern.type is PatternType.Gif and pattern.template.filename == filename:
+                self.state.patterns[index] = pattern
+                break
+        else:
+            self.state.patterns.append(pattern)

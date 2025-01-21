@@ -11,7 +11,7 @@ from handlers.geometry import GeometryHandler
 
 from handlers.main import MainHandler, ShutdownHandler, FileStoreHandler
 from handlers.overall import OverallStateHandler, OverallRunHandler, OverallOptionsHandler
-from handlers.pattern import PatternsHandler, PatternHandler, PatternEditHandler
+from handlers.pattern import PatternsHandler, PatternHandler, PatternEditHandler, PatternGifHandler
 from handlers.single import SingleHandler
 from handlers.sequence import StartSequenceHandler, StopSequenceHandler, SequenceInfoHandler, SequenceSeekHandler
 from handlers.websocket import WebSocketHandler
@@ -41,9 +41,8 @@ class Application(tornado.web.Application):
 
                 (r"/api/geometry", GeometryHandler),
 
-                (r"/api/patterns", PatternsHandler),
                 (r"/api/pattern/edits", PatternEditHandler),
-                (r"/api/pattern/([a-zA-Z0-9_-]+)", PatternHandler),
+                (r"/api/pattern/gif", PatternGifHandler),
 
                 (r"/api/sequence/start", StartSequenceHandler),
                 (r"/api/sequence/stop", StopSequenceHandler),

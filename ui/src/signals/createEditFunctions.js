@@ -8,7 +8,7 @@ export const keysMatch = (key1, key2) => {
     return key1 === key2;
 };
 
-const createEditFunctions = (editsSignal, selectedSignal) => {
+const createEditFunctions = (editsSignal, selectedIdSignal) => {
     /*
         Pass this function one or two signals:
             - one for the target list where all the edits of this kind are stored
@@ -18,7 +18,7 @@ const createEditFunctions = (editsSignal, selectedSignal) => {
      */
 
     const matchingEdit = key => edit =>
-        edit.patternId === selectedSignal.value?.id
+        edit.patternId === selectedIdSignal.value
         && keysMatch(edit.key, key);
 
     const findEdit = (key) =>
@@ -28,7 +28,7 @@ const createEditFunctions = (editsSignal, selectedSignal) => {
         if (key instanceof Array) {
             key = key.join(".");
         }
-        const patternId = selectedSignal.value.id;
+        const patternId = selectedIdSignal.value;
         const edit = {
             id: [patternId, key].join("."),
             patternId,

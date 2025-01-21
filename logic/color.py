@@ -1,4 +1,4 @@
-from colorsys import hsv_to_rgb
+from colorsys import hsv_to_rgb, rgb_to_hsv
 from dataclasses import dataclass
 from random import randint
 from typing import Tuple, Self
@@ -25,7 +25,7 @@ class HsvColor:
     v: float = 0
 
     def __repr__(self):
-        return f"[H{self.h}|S{self.s}|V{round(self.v, 2)}]"
+        return f"[H{round(self.h)} S{round(self.s)} V{round(self.v, 1)}]"
 
     @classmethod
     def Random(cls, h=None, s=None, v=None):
@@ -71,8 +71,24 @@ class HsvColor:
     def copy(self):
         return HsvColor(self.h, self.s, self.v)
 
+    def add(self, color: Self, factor: float = 1):
+        r0, g0, b0 = self.to_raw_rgb()
+        r1, g1, b1 = color.to_raw_rgb()
+        h, s, v = rgb_to_hsv(
+            r0 + factor * r1,
+            g0 + factor * g1,
+            b0 + factor * b1
+        )
+        self.h = 360 * h
+        self.s = 100 * s
+        self.v = 100 * v
+
+    def to_raw_rgb(self):
+        # this returns the [R, G, B] in values 0..1 each
+        return hsv_to_rgb(self.h/360, self.s/100, self.v/100)
+
     def to_rgb(self):
-        r, g, b = hsv_to_rgb(self.h/360, self.s/100, self.v/100)
+        r, g, b = self.to_raw_rgb()
         return [255 * r, 255 * g, 255 * b]
 
     @classmethod
@@ -97,3 +113,8 @@ def create_flat_rgb_gradient(length, rgb1, rgb2):
             for c in range(3)
         ]
     ]
+
+
+def apply_fade(pixels: HsvColorArray, fade_factor: float):
+    for color in pixels:
+        color.scale_v(fade_factor)
