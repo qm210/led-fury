@@ -1,6 +1,6 @@
 from logic.color import HsvColor
-from logic.patterns import PointMotion, Boundary, BoundaryBehaviour
-from logic.patterns.PointPattern import PointPattern
+from logic.patterns import PointMotion, BoundaryBehaviour
+from logic.patterns.templates.PointPattern import PointPattern
 from logic.patterns.pattern import Pattern, PatternType
 
 
@@ -17,19 +17,13 @@ def create_sample_pattern(self):
                     PointMotion(15),
                     PointMotion()
                 ],
-                boundary=[
-                    Boundary(
-                        max=self.state.max_length - 1,
-                        behaviour=BoundaryBehaviour.Bounce
-                    ),
-                    Boundary(
-                        max=self.state.n_segments - 1,
-                        behaviour=BoundaryBehaviour.Wrap,
-                    )
+                at_boundary=[
+                    BoundaryBehaviour.Bounce,
+                    BoundaryBehaviour.Wrap,
                 ],
                 color=HsvColor.RandomFull(),
                 hue_delta=360,
+                fade=0.95
             ),
-            fade=0.95
         )
     ]

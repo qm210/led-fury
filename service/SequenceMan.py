@@ -2,10 +2,9 @@ from contextlib import contextmanager
 from typing import Optional, List, Tuple
 
 from tornado import gen
-from tornado.ioloop import PeriodicCallback
 
 from handlers.websocket import WebSocketHandler
-from logic.patterns.GifPattern import GifPattern
+from logic.patterns.templates.GifPattern import GifPattern
 from logic.patterns.pattern import Pattern, PatternType
 from model.state import SequenceState
 from model.setup import PixelSegment, ControllerSetup
@@ -165,17 +164,17 @@ class SequenceMan:
 
     @gen.coroutine
     def import_gif_pattern(self, filename):
-        template = yield GifPattern.import_from(filename)
+        template = yield GifPattern.import_from(filename, self.state.geometry)
         pattern = Pattern(
             template=template,
             type=PatternType.Gif,
             name=filename,
-            fade=0,
             max_instances=1,
         )
-        for index, pattern in enumerate(self.state.patterns):
-            if pattern.type is PatternType.Gif and pattern.template.filename == filename:
+        for index, p in enumerate(self.state.patterns):
+            if p.type is PatternType.Gif and p.template.filename == filename:
                 self.state.patterns[index] = pattern
                 break
         else:
             self.state.patterns.append(pattern)
+        return pattern

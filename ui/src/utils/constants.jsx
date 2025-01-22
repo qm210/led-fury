@@ -1,9 +1,10 @@
 export const DELTA = "\u0394";
 export const TRIANGLE_RIGHT = "\u25b6";
-export const TRIANGLE_LEFT= "\u25c0";
+export const TRIANGLE_LEFT = "\u25c0";
 export const CHECKMARK = "\u2713";
 export const THIN_SPACE = "\u2009";
 export const INFINITY = "\u221e";
 export const MINUS = "\u2212";
 export const PLUS = "\u002b";
 export const PLUSMINUS = "\u00b1";
+export const IS_ELEMENT = "\u2208";

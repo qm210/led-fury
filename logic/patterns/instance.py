@@ -1,11 +1,10 @@
 from dataclasses import dataclass
-from math import exp
 from typing import TYPE_CHECKING
 
 from tornado.log import app_log
 
 from logic.color import HsvColorArray
-from logic.patterns.PointPattern import PointPattern, PointPatternState
+from logic.patterns.templates.PointPattern import PointPattern, PointPatternState
 
 if TYPE_CHECKING:
     from model.state import SequenceState

@@ -27,6 +27,8 @@ class SequenceState:
     seek_second: float = 0
 
     patterns: List[Pattern] = field(default_factory=list)
+
+    # Note: these are actually unused
     selected_frame: Optional[int] = None
     selected_pos: List[Tuple[int, int]] = field(default_factory=list)
     selected_pattern: Optional[str] = None
@@ -54,23 +56,18 @@ class SequenceState:
         self.n_segments = len(setup.segments)
         self.n_pixels = sum([seg.length for seg in setup.segments])
         self.geometry = GeometryMan.calculate_geometry(setup.segments)
+        for pattern in self.patterns:
+            pattern.template.apply_geometry(self.geometry)
+
         self._rgb_array = self.new_rgb_array()
         self._rgb_list = []
-
-        for pattern in self.patterns:
-            for dim in range(2):
-                boundary = pattern.template.boundary[dim]
-                if boundary.resize_on_segment_change:
-                    axis = self.geometry.area.get_axis(dim)
-                    boundary.min = axis.min
-                    boundary.max = axis.max
 
     def update_from(self, stored: dict):
         def read(attr: str, key: str = ""):
             if not key:
                 key = attr
-            value = stored.get(key)
-            if value is not None:
+            if key in stored:
+                value = stored[key]
                 setattr(self, attr, value)
         read("update_ms")
         read("sequence_length")

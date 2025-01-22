@@ -1,13 +1,20 @@
 {
     "state": {
-        "update_ms": 50,
-        "bytesize": 3,
-        "sequence_length": 10,
-        "sequence_loops": true,
-        "sequence_frames": 20,
         "patterns": [
             {
                 "template": {
+                    "boundary": {
+                        "x": {
+                            "min": 0,
+                            "max": 2.0
+                        },
+                        "y": {
+                            "min": 0,
+                            "max": 2.0
+                        }
+                    },
+                    "resize_on_segment_change": true,
+                    "fade": 0.95,
                     "pos": [
                         1.0,
                         1.0
@@ -30,19 +37,9 @@
                             "type": "linear"
                         }
                     ],
-                    "boundary": [
-                        {
-                            "min": 0,
-                            "max": 2.0,
-                            "behaviour": "bounce",
-                            "resize_on_segment_change": true
-                        },
-                        {
-                            "min": 0,
-                            "max": 2.0,
-                            "behaviour": "wrap",
-                            "resize_on_segment_change": true
-                        }
+                    "at_boundary": [
+                        "bounce",
+                        "wrap"
                     ],
                     "color": {
                         "h": 285,
@@ -59,13 +56,40 @@
                 "start_sec": 0,
                 "stop_sec": null,
                 "respawn_sec": null,
-                "fade": 0.95,
                 "max_instances": 10
             }
         ],
-        "selected_frame": null,
         "selected_pos": [],
-        "selected_pattern": null,
+        "_rgb_array": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+        ],
+        "_rgb_list": [],
         "max_length": 9,
         "n_segments": 1,
         "n_pixels": 9,
@@ -134,7 +158,13 @@
                 "height": 3.0
             }
         },
-        "verbose": true
+        "verbose": false,
+        "update_ms": 50,
+        "sequence_length": 10,
+        "sequence_loops": true,
+        "sequence_frames": 20,
+        "selected_frame": null,
+        "selected_pattern": null
     },
     "setup": {
         "host": "192.168.178.60",

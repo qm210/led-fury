@@ -3,7 +3,7 @@ from enum import Enum
 
 
 class BoundaryBehaviour(Enum):
-    Unbounded = "undefined"
+    Ignore = "ignore"
     Wrap = "wrap"
     Bounce = "bounce"
 
@@ -12,7 +12,7 @@ class BoundaryBehaviour(Enum):
 class Boundary:
     min: int = 0
     max: int = None
-    behaviour: BoundaryBehaviour = field(default=BoundaryBehaviour.Unbounded)
+    behaviour: BoundaryBehaviour = field(default=BoundaryBehaviour.Ignore)
     resize_on_segment_change: bool = True
 
 

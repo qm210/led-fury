@@ -1,5 +1,6 @@
 import math
 from dataclasses import dataclass, field
+from typing import Optional, Union
 
 
 @dataclass
@@ -59,20 +60,49 @@ class PixelCoordinate(Vec2d):
 
 @dataclass
 class Range:
-    min: float = 0
-    max: float = 0
+    # Optional: "None" means unbounded, i.e. \pm\infty
+    min: Optional[float] = 0
+    max: Optional[float] = 0
 
     def cover(self, point: float):
-        if self.min > point:
+        if self.min is not None and self.min > point:
             self.min = point
-        if self.max < point:
+        if self.max is not None and self.max < point:
             self.max = point
+
+    @classmethod
+    def zero_to_inf(cls):
+        return cls(min=0, max=None)
+
+    @classmethod
+    def from_json(cls, stored: Union[dict, list]):
+        if isinstance(stored, list):
+            return cls(
+                min=stored[0],
+                max=stored[1],
+            )
+        else:
+            return cls(
+                min=stored.get("min", 0),
+                max=stored.get("max", 0)
+            )
+
+    @classmethod
+    def copy(cls, range):
+        return cls(min=range.min, max=range.max)
 
 
 @dataclass
 class Area:
     x: Range = field(default_factory=Range)
     y: Range = field(default_factory=Range)
+
+    @classmethod
+    def zero_to_inf(cls):
+        return cls(
+            x=Range.zero_to_inf(),
+            y=Range.zero_to_inf(),
+        )
 
     def cover(self, point: Vec2d):
         self.x.cover(point.x)
@@ -85,6 +115,26 @@ class Area:
             return self.y
         else:
             raise ValueError(f"Area is only 2D, there is no index {dimension_index}")
+
+    @classmethod
+    def from_json(cls, stored: dict):
+        if isinstance(stored, list):
+            x_range, y_range = stored
+        else:
+            x_range = stored["x"]
+            y_range = stored["y"]
+        return cls(
+            x=Range.from_json(x_range),
+            y=Range.from_json(y_range)
+        )
+
+    @property
+    def size(self):
+        return (
+            int(math.ceil(self.x.max - self.x.min)),
+            int(math.ceil(self.y.max - self.y.min))
+        )
+
 
 @dataclass
 class Rect:

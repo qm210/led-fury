@@ -4,18 +4,20 @@ from math import exp, sqrt
 from typing import List, TYPE_CHECKING
 
 from logic.color import HsvColor
-from logic.patterns import PointMotion, BoundaryBehaviour, Boundary, MotionType
+from logic.patterns import PointMotion, BoundaryBehaviour, MotionType
+from logic.patterns.template import PatternTemplate
+from model.utils import factory2d
 
 if TYPE_CHECKING:
     from service.RunState import RunState
 
 
 @dataclass
-class PointPattern:
-    pos: List[float] = field(default_factory=lambda: [0, 0])
-    size: List[float] = field(default_factory=lambda: [1, 1])
-    motion: List[PointMotion] = field(default_factory=lambda: [PointMotion(), PointMotion()])
-    boundary: List[Boundary] = field(default_factory=lambda: [Boundary(), Boundary()])
+class PointPattern(PatternTemplate):
+    pos: List[float] = field(default_factory=factory2d(0))
+    size: List[float] = field(default_factory=factory2d(1))
+    motion: List[PointMotion] = field(default_factory=factory2d(PointMotion))
+    at_boundary: List[BoundaryBehaviour] = field(default_factory=factory2d(BoundaryBehaviour.Ignore))
     color: HsvColor = field(default_factory=HsvColor)
     hue_delta: int = 0
     sat_delta: int = 0
@@ -23,11 +25,11 @@ class PointPattern:
 
     @classmethod
     def from_json(cls, stored: dict):
-        result = cls()
+        result = super().from_json(stored)
         if stored.get("pos") is not None:
             result.pos = stored["pos"][:]
         if stored.get("size") is not None:
-            result.size = stored["size"][:]
+            result.original_size = stored["size"][:]
         if stored.get("motion") is not None:
             result.motion = [
                 PointMotion(
@@ -38,14 +40,10 @@ class PointPattern:
                 )
                 for m in stored["motion"]
             ]
-        if stored.get("boundary") is not None:
-            result.boundary = [
-                Boundary(
-                    min=b["min"],
-                    max=b["max"],
-                    behaviour=BoundaryBehaviour(b["behaviour"]),
-                )
-                for b in stored["boundary"]
+        if stored.get("at_boundary") is not None:
+            result.at_boundary = [
+                BoundaryBehaviour(b)
+                for b in stored["at_boundary"]
             ]
         color = stored.get("color")
         if color is not None:
@@ -90,7 +88,7 @@ class PointPatternState:
         )
 
     @staticmethod
-    def debug(self, verbose, *messages):
+    def debug(verbose, *messages):
         if not verbose:
             return
         print(*messages)

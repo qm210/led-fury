@@ -8,7 +8,7 @@ from typing import Optional, List, TYPE_CHECKING
 from tornado.ioloop import PeriodicCallback
 
 from logic.color import apply_fade, HsvColorArray
-from logic.patterns.PointPattern import PointPatternState
+from logic.patterns.templates.PointPattern import PointPatternState
 from logic.patterns.instance import PatternInstance
 
 if TYPE_CHECKING:

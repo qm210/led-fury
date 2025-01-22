@@ -9,7 +9,7 @@ import {
 } from "../signals/pattern.js";
 import * as Lucide from "lucide-preact";
 import {ActionButtons} from "../components/ActionButtons.jsx";
-import {INFINITY, PLUSMINUS, THIN_SPACE, TRIANGLE_RIGHT} from "../utils/constants.jsx";
+import {INFINITY, IS_ELEMENT, PLUSMINUS, THIN_SPACE, TRIANGLE_RIGHT} from "../utils/constants.jsx";
 import {currentGeometry} from "../signals/setup.js";
 import {importGifPattern} from "../api/api.js";
 
@@ -156,16 +156,14 @@ const EditPattern = () => {
                     <td/>
                     <td>{pattern.type}</td>
                     <td width={"30%"}>
-                        <span class={"opacity-30 text-sm"}>
-                            (there is no other)
-                        </span>
+                        {formatBoundary(pattern.template.boundary)}
                     </td>
                     <td width={"0"}/>
                 </tr>
                 <EditRow
                     label={"Fade Factor"}
                     editKey={"fade"}
-                    getDefault={p => p.fade}
+                    getDefault={p => p.template.fade}
                     numeric={{
                         min: 0,
                         max: 100,
@@ -235,11 +233,10 @@ const EditPattern = () => {
                     </td>
                 </tr>
                 <EditRow
-                    label={"Boundary Behaviour"}
-                    editKey={"boundary_behaviour"}
+                    label={"At Boundary"}
+                    editKey={"at_behaviour"}
                     isVector
-                    getDefault={(p, d) => p.template.boundary[d].behaviour}
-                    getExtra={formatBoundary}
+                    getDefault={(p, d) => p.template.at_boundary[d]}
                     select={{
                         optionsKey: "BoundaryBehaviour"
                     }}
@@ -263,8 +260,14 @@ const formatOptionalNumber = (value) => {
     return result;
 };
 
-const formatBoundary = (pattern, dim) => {
-    const boundary = pattern.template.boundary[dim];
+const formatBoundary = (boundary) => [
+        ["x", formatRange(boundary.x)],
+        ["y", formatRange(boundary.y)]
+    ].map(([label, result]) =>
+        [label, IS_ELEMENT, result].join(THIN_SPACE)
+    ).join("; ");
+
+const formatRange = (boundary) => {
     const min = formatOptionalNumber(boundary.min);
     const max = formatOptionalNumber(boundary.max);
     const range = !min && !max

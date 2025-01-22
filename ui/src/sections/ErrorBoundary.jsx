@@ -1,6 +1,9 @@
 import {useErrorBoundary} from "preact/hooks";
 import {backendBroken} from "../signals/app.js";
 import * as Lucide from "lucide-preact";
+import {patternEdits, selectedPattern} from "../signals/pattern.js";
+import {currentGeometry, currentSetup, synchronizedSetup} from "../signals/setup.js";
+import {segmentEdits} from "../signals/segments.js";
 
 
 const ErrorBoundary = ({children}) => {
@@ -24,6 +27,15 @@ const ErrorBoundary = ({children}) => {
     }
 
     if (error) {
+        console.log(
+            "Signals:",
+            "selectedPattern =", selectedPattern.value,
+            "patternEdits =", patternEdits.value,
+            "currentSetup =", currentSetup.value,
+            "currentGeometry =", currentGeometry.value,
+            "segmentEdits =", segmentEdits.value,
+            "synchronizedSetup =", synchronizedSetup.value,
+        );
         return (
             <div className={"full-column"}>
                 <Lucide.FishOff size={"10vh"}/>

@@ -1,6 +1,9 @@
 import json
+from json import JSONDecodeError
+from traceback import print_exc
 
 import tornado
+from tornado.log import app_log
 
 from app.json import JsonEncoder
 
@@ -28,4 +31,9 @@ class ManHandler(tornado.web.RequestHandler):
         return super().write(result)
 
     def body(self):
-        return json.loads(self.request.body)
+        body = self.request.body
+        try:
+            return json.loads(body)
+        except JSONDecodeError as ex:
+            app_log.error(f"Cannot parse body: \"{body}\"; {str(ex)}")
+            return {}

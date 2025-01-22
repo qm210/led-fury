@@ -37,7 +37,7 @@ class PatternGifHandler(ManHandler):
     def post(self):
         # TODO: get file from upload
         pattern = yield self.man.import_gif_pattern("./sample.gif")
-        # self.write(pattern)
+        self.write(pattern)
 
 
 class PatternHandler(ManHandler):
