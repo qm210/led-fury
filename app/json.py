@@ -22,7 +22,7 @@ def recursive_asdict(obj):
         return {
             k: recursive_asdict(v)
             for k, v in vars(obj).items()
-            if not k.startswith('__')
+            if not k.startswith('_')
         }
     return obj
 

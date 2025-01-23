@@ -1,7 +1,7 @@
 import Slider from "rc-slider";
 import {DragNumberInput} from "./DragNumberInput.jsx";
 import {ColorChooseRow} from "../pattern/ColorChooseRows.jsx";
-import {applyEdit, findEdit, selectedPattern} from "../signals/pattern.js";
+import {applyEdit, findEdit, visiblePattern} from "../signals/pattern.js";
 import {OptionSelector} from "./OptionSelector.js";
 import {is1d} from "../signals/setup.js";
 
@@ -24,7 +24,7 @@ export const EditRow = ({
     const onClickHeaderCell =
         onClickHeader === undefined
             ? undefined
-            : () => onClickHeader(selectedPattern.value);
+            : () => onClickHeader(visiblePattern.value);
 
     return Array(dimensions).fill(0).map((_, dim) =>
         <EditRowForDimension
@@ -74,11 +74,11 @@ const EditRowForDimension = ({
         hideCoordinate
     }) => {
 
-    const defaultValue = getDefault(selectedPattern.value, dimIndex);
+    const defaultValue = getDefault(visiblePattern.value, dimIndex);
     const currentValue = findEdit(editKey)?.value ?? defaultValue;
     const coordinate = hideCoordinate ? "" : (["X", "Y"][dimIndex]);
     const displayFunc = numeric?.display ?? defaultDisplayFunc;
-    const extraInfo = getExtra ? getExtra(selectedPattern.value, dimIndex): null;
+    const extraInfo = getExtra ? getExtra(visiblePattern.value, dimIndex): null;
 
     if (color) {
         return (

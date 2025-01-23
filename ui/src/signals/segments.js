@@ -1,12 +1,10 @@
 import {signal} from "@preact/signals";
 import {keysMatch} from "./createEditFunctions.js";
 import {currentSetup, synchronizedSetup, updateCurrentSetupFromEdits} from "./setup.js";
+import {setupStorageKey} from "./storage.js";
 
 
 export const segmentEdits = signal([]);
-
-
-const setupStorageKey = "led.fury.edits.setup";
 
 
 // TODO: unify with crea
@@ -47,26 +45,3 @@ export const resetSetupEdits = () => {
     localStorage.removeItem(setupStorageKey);
 };
 
-export const loadSetupFromStorage = (id) => {
-    try {
-        const stored = localStorage.getItem(setupStorageKey);
-        if (!stored) {
-            return false;
-        }
-        const parsed = JSON.parse(stored);
-        if (!parsed.lastSetup || !parsed.edits) {
-            // old format
-            return false;
-        }
-        if (parsed.lastSetup.id !== id) {
-            localStorage.removeItem(setupStorageKey);
-            return false;
-        }
-        synchronizedSetup.value = parsed.lastSetup;
-        segmentEdits.value = parsed.edits;
-        return true;
-    } catch (err) {
-        console.warn(err);
-        return false;
-    }
-};

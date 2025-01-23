@@ -19,21 +19,24 @@ export const EditSegments = () => {
             <div>
                 Setup
             </div>
-            <table
-                class="w-full border-2 rounded-sm border-gray-300"
-            >
+            <table class="w-full border-2 rounded-sm border-gray-300">
                 <tbody>
                 <tr className="border-t border-2 border-gray-300">
-                    <td>
+                    <td class={"whitespace-nowrap text-left"}>
                         WLED Host
                     </td>
-                    <td colSpan={2}>
+                    <td colSpan={3}>
                         {setup.host}{"\u2009:\u2009"}{setup.port}
+                    </td>
+                </tr>
+                <tr>
+                    <td class={"whitespace-nowrap text-left"} colSpan={2}>
+                        LED Segments:
                     </td>
                 </tr>
                 {
                     setup.segments.map((segment, index) =>
-                        <EditSegmentRows
+                        <SegmentEditor
                             segment={segment}
                             segments={setup.segments}
                             index={index}
@@ -47,7 +50,7 @@ export const EditSegments = () => {
     );
 };
 
-const EditSegmentRows = ({segment, index, segments}) => {
+const SegmentEditor = ({segment, index, segments}) => {
 
     const makeKey = (...args) => ["seg", index, ...args];
 
@@ -56,15 +59,10 @@ const EditSegmentRows = ({segment, index, segments}) => {
     return <>
         <tr class={"segment-row"}>
             {
-                index === 0
-                    ? (
-                        <td
-                            rowSpan={rowSpan}
-                            className={"align-top"}
-                        >
-                            LED Segments
-                        </td>
-                    ) : <td/>
+                segments.length > 1 &&
+                <td rowSpan={rowSpan}>
+                    #{index + 1}
+                </td>
             }
             <td>
                 Pixels:

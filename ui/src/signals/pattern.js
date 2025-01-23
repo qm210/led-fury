@@ -10,10 +10,14 @@ export const patternEdits = signal([]);
 export const selectedPatternId = signal(null);
 export const hoveredPatternId = signal(null);
 
+export const visiblePatternId = computed(() =>
+    hoveredPatternId.value ?? selectedPatternId.value
+);
+
 export const {
     findEdit,
     applyEdit
-} = createEditFunctions(patternEdits, selectedPatternId);
+} = createEditFunctions(patternEdits, visiblePatternId);
 
 export const selectedPattern = computed(() =>
     synchronizedPatterns.value.find(
@@ -24,6 +28,12 @@ export const selectedPattern = computed(() =>
 export const hoveredPattern = computed(() =>
     synchronizedPatterns.value.find(
         p => p.id === hoveredPatternId.value
+    )
+);
+
+export const visiblePattern = computed(() =>
+    synchronizedPatterns.value.find(
+        p => p.id === visiblePatternId.value
     )
 );
 

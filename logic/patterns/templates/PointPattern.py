@@ -5,6 +5,7 @@ from typing import List, TYPE_CHECKING
 
 from logic.color import HsvColor
 from logic.patterns import PointMotion, BoundaryBehaviour, MotionType
+from logic.patterns.state import PatternInstanceState
 from logic.patterns.template import PatternTemplate
 from model.utils import factory2d
 
@@ -58,7 +59,7 @@ class PointPattern(PatternTemplate):
 
 
 @dataclass
-class PointPatternState:
+class PointPatternState(PatternInstanceState):
     pos: List[float]
     vel: List[float]
     acc: List[float]

@@ -3,8 +3,24 @@
 .pattern-list {
     display: grid;
     grid-template-columns: auto 1fr;
-    grid-template-rows: min-content;
+    grid-auto-rows: min-content;
     grid-auto-flow: dense;
+
+    min-width: 7vw;
+
+    text-align: left;
+    white-space: nowrap;
+}
+
+.pattern-list__container {
+    background-color: #8882;
+    border: 2px solid #8884;
+    border-radius: 2px;
+    overflow-y: auto;
+
+    min-height: 200px;
+
+    --selected-color: #fffc;
 }
 
 .number-input-spinner {

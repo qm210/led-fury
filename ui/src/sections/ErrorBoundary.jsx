@@ -1,13 +1,34 @@
-import {useErrorBoundary} from "preact/hooks";
+import {useEffect, useErrorBoundary} from "preact/hooks";
 import {backendBroken} from "../signals/app.js";
 import * as Lucide from "lucide-preact";
 import {patternEdits, selectedPattern} from "../signals/pattern.js";
 import {currentGeometry, currentSetup, synchronizedSetup} from "../signals/setup.js";
 import {segmentEdits} from "../signals/segments.js";
+import axios from "axios";
+import {useOverallState} from "../api/api.js";
 
+
+const useReconnectionEffect = (resetError) => {
+    const overallQuery = useOverallState(
+        {
+            enabled: !!backendBroken.value,
+            retry: () => backendBroken.value,
+            retryDelay: 3000,
+        });
+
+    useEffect(() => {
+        if (!overallQuery.isError) {
+            resetError();
+            backendBroken.value = false;
+        }
+    }, [overallQuery.isError]);
+
+    return null;
+};
 
 const ErrorBoundary = ({children}) => {
     const [error, resetError] = useErrorBoundary();
+    useReconnectionEffect(resetError);
 
     if (backendBroken.value) {
         return (
@@ -43,7 +64,7 @@ const ErrorBoundary = ({children}) => {
                     Bad bad error goin' on.
                 </div>
                 <div className={"text-sm opacity-70"}>
-                    This is commonly known as a <i>"stooly situation".</i>
+                    This is commonly known as a <i>stooly situation</i>.
                 </div>
                 <div className={"text-xl mt-8 border-2 border-black p-2 shadow"}>
                     <span className={"font-bold"}>

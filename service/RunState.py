@@ -8,7 +8,8 @@ from typing import Optional, List, TYPE_CHECKING
 from tornado.ioloop import PeriodicCallback
 
 from logic.color import apply_fade, HsvColorArray
-from logic.patterns.templates.PointPattern import PointPatternState
+from logic.patterns.templates.GifPattern import GifPattern, GifPatternState
+from logic.patterns.templates.PointPattern import PointPatternState, PointPattern
 from logic.patterns.instance import PatternInstance
 
 if TYPE_CHECKING:
@@ -82,7 +83,7 @@ class RunState:
             # TODO: implement respawn_sec with respect to max_instances
 
             for instance in self.pattern_instances[pattern.id]:
-                apply_fade(instance.pixels, pattern.fade)
+                apply_fade(instance.pixels, pattern.template.fade)
                 instance.proceed_motion(self)
                 instance.render(state)
 
@@ -90,8 +91,15 @@ class RunState:
         instances = self.pattern_instances[pattern.id]
         if len(instances) >= pattern.max_instances:
             return
-        # TODO: would distinguish types here, but there is none other
-        instance_state = PointPatternState.init_from(pattern.template)
+
+        if isinstance(pattern.template, PointPattern):
+            instance_state = PointPatternState.init_from(pattern.template)
+        elif isinstance(pattern.template, GifPattern):
+            # TODO
+            instance_state = GifPatternState()
+        else:
+            raise ValueError("Cannot spawn instance of pattern yet... srylol")
+
         self.pattern_instances[pattern.id].append(
             PatternInstance(
                 state=instance_state,

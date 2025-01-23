@@ -2,7 +2,7 @@ import {DragNumberInput} from "../components/DragNumberInput.jsx";
 import {Colorful, hsvaToHex} from "@uiw/react-color";
 import {useState} from "react";
 import {Popover} from "react-tiny-popover";
-import {applyEdit, findEdit, selectedPattern} from "../signals/pattern.js";
+import {applyEdit, findEdit, selectedPattern, visiblePattern} from "../signals/pattern.js";
 import {DELTA} from "../utils/constants.jsx";
 
 
@@ -92,7 +92,7 @@ export const ColorChooseRow = ({editKey, header, currentValue, defaultValue}) =>
 };
 
 export const ColorVariationCell = () => {
-    const p = selectedPattern.value;
+    const p = visiblePattern.value;
     const defaultDeltaH = p.template.hue_delta;
     const currentDeltaH = findEdit("deltaHue")?.value ?? defaultDeltaH;
     const defaultDeltaS = p.template.sat_delta;

@@ -1,4 +1,4 @@
-import {signal} from "@preact/signals";
+import {computed, signal} from "@preact/signals";
 import {resetSetupEdits, segmentEdits} from "./segments.js";
 import {updateGeometry} from "../api/api.js";
 import {overwriteDebug} from "../sections/DebugConsole.jsx";
@@ -14,6 +14,23 @@ export const currentGeometry = signal({
 export const is1d = () =>
     currentGeometry.value?.geometry.area.y.max < 2;
 
+export const geometryArea = computed(() => {
+    if (!currentGeometry.value?.geometry) {
+        return {
+            x: {min: 0, max: 0},
+            y: {min: 0, max: 0},
+            width: 0,
+            height: 0
+        };
+    }
+    const {area, rect: {width, height}} = currentGeometry.value.geometry;
+    return {
+        x: area.x,
+        y: area.y,
+        width,
+        height
+    };
+});
 
 export const updateCurrentSetupFromEdits = async () => {
     if (segmentEdits.value.length === 0) {

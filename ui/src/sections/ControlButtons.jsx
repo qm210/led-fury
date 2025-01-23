@@ -20,7 +20,7 @@ export const ControlButtons = () => {
     }
 
     return (
-        <div class={"flex w-full justify-stretch items-stretch"}>
+        <div class={"flex justify-stretch items-stretch"}>
             <ActionButtons
                 actions={[
                     {

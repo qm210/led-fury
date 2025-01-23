@@ -1,10 +1,11 @@
 import {useState, useEffect, Suspense} from "preact/compat";
 import Loader from "../utils/Loader.jsx";
 import {synchronizedPatterns, selectedPattern, selectedPatternId} from "../signals/pattern.js";
-import {loadSetupFromStorage, segmentEdits} from "../signals/segments.js";
+import {segmentEdits} from "../signals/segments.js";
 import {synchronizedSetup, updateCurrentSetupFromEdits} from "../signals/setup.js";
 import {useOverallState} from "../api/api.js";
 import * as Lucide from "lucide-preact";
+import {loadSetupFromStorage} from "../signals/storage.js";
 
 
 const QueryInitializer = ({children}) =>

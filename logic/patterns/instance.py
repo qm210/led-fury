@@ -4,7 +4,9 @@ from typing import TYPE_CHECKING
 from tornado.log import app_log
 
 from logic.color import HsvColorArray
-from logic.patterns.templates.PointPattern import PointPattern, PointPatternState
+from logic.patterns.state import PatternInstanceState
+from logic.patterns.template import PatternTemplate
+from logic.patterns.templates.PointPattern import PointPattern
 
 if TYPE_CHECKING:
     from model.state import SequenceState
@@ -16,15 +18,21 @@ VERBOSE = True
 
 @dataclass
 class PatternInstance:
-    template: PointPattern
-    state: PointPatternState
+    template: PatternTemplate
+    state: PatternInstanceState
     pixels: HsvColorArray
     # for debugging:
     pattern_id: str
     spawned_sec: float = 0
 
     def render(self, state: "SequenceState"):
-        # would distinguish different types, but there are none yet.. :)
+        if isinstance(self.template, PointPattern):
+            self.render_point(state)
+        elif isinstance(self.template, GifPattern):
+            # -- TODO -- make that in good.
+            self.render_gif(state)
+
+    def render_point(self, state: "SequenceState"):
         s = self.state
         for index, x, y in state.geometry.iterate():
             intensity = self.state.get_intensity(x, y)
