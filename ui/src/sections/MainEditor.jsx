@@ -19,7 +19,7 @@ const EditorPage = () => {
                     </div>
                     <PatternEditor/>
                 </div>
-                <div className="flex flex-col gap-2 bg-slate-100 p-2 w-full h-full justify-stretch items-stretch">
+                <div className="flex flex-col bg-slate-100 w-full h-full justify-stretch items-stretch">
                     <LiveView/>
                     <ControlButtons/>
                 </div>
@@ -32,11 +32,6 @@ const EditorPage = () => {
 
 export default EditorPage;
 
-
-const LeftPanel = () => {
-    // these is none :) but there _could_ be!
-    return null;
-};
 
 const PendingOverlay = () => {
     if (!pendingOverlay.value) {

@@ -1,25 +1,32 @@
+from time import perf_counter
+
 from tornado import gen
 from tornado.httpclient import HTTPError
 
 from app.handler import ManHandler
 
 
-class PatternsHandler(ManHandler):
-    # needed still? -> OverallStateHandler
-    def get(self):
-        self.write(self.man.state.patterns)
+class PatternHandler(ManHandler):
+    def delete(self, id):
+        self.man.delete_pattern(id)
 
-    def post(self):
-        args = self.get_arguments()
+    @gen.coroutine
+    def patch(self, id):
         body = self.body()
-        print("TODO: Add new pattern / copy, args:", args, "; body:", body)
-        raise HTTPError(501, "POST not yet implemented.")
-
-    def delete(self):
-        args = self.get_arguments()
-        body = self.body()
-        print("TODO: Delete pattern, args:", args, "; body:", body)
-        raise HTTPError(501, "DELETE not yet implemented.")
+        try:
+            self.man.state.update_pattern_visibility(
+                id,
+                show_solo=body.get('showSolo'),
+                hidden=body.get('hidden'),
+            )
+            if 'seekSecond' in body:
+                # TODO: would it be confusing not to await the result?
+                yield self.man.seek_in_sequence(
+                    second=body["seekSecond"],
+                    broadcast=True,
+                )
+        except KeyError as exc:
+            return HTTPError(404, str(exc))
 
 
 class PatternEditHandler(ManHandler):
@@ -35,29 +42,13 @@ class PatternEditHandler(ManHandler):
 class PatternGifHandler(ManHandler):
     @gen.coroutine
     def post(self):
-        body = self.body()
-        files = self.request.files
-        file = files = self.request.files.get("file", None)
+        arrived_sec = perf_counter()
+        # this is obviously a super awesome fallback
+        files = self.request.files.get(
+            "files",
+            ["./sample_files/supergif.gif"]
+        )
         render_second = self.get_argument("renderSecond")
-        # TODO: get file from upload
-
-        test_filename = "./sample_files/supergif.gif"
-
-        pattern = yield self.man.import_gif_pattern(test_filename)
-        if render_second is not None and not self.man.running:
-            rgb_array = yield self.man.render_single_pattern(
-                second=render_second,
-                pattern=pattern
-            )
-            # just monkey-patch the values on there for now... =´)
-            pattern.rgb_values = rgb_array
-        self.write(pattern)
-
-
-class PatternHandler(ManHandler):
-    # def post(self, _id):
-    #     body = self.body()
-    #     self.man.upsert_pattern(body)
-
-    def delete(self, id):
-        self.man.delete_pattern(id)
+        result = yield self.man.handle_gif_import(files, render_second)
+        result["tookSeconds"] = perf_counter() - arrived_sec
+        self.write(result)

@@ -28,6 +28,7 @@ class SequenceState:
     seek_second: float = 0
 
     patterns: List[Pattern] = field(default_factory=list)
+    solo_pattern_id: Optional[str] = None
 
     # Note: these are actually unused
     selected_frame: Optional[int] = None
@@ -91,6 +92,7 @@ class SequenceState:
                 Pattern.from_json(p)
                 for p in stored["patterns"]
             ]
+        read("solo_pattern_id")
 
     def new_pixel_array(self) -> HsvColorArray:
         return self.geometry.create_object_array(factory=HsvColor)
@@ -105,8 +107,12 @@ class SequenceState:
             if pattern.id == id
         ), None)
 
-    def patterns_with_instances(self, run: RunState):
+    def visible_patterns_with_instances(self, run: RunState):
         for pattern in self.patterns:
+            if pattern.hidden or pattern.opacity <= 0:
+                continue
+            if self.solo_pattern_id is not None and pattern.id != self.solo_pattern_id:
+                continue
             for instance in run.pattern_instances[pattern.id]:
                 yield pattern, instance
 
@@ -115,10 +121,9 @@ class SequenceState:
         for coordinate in self.geometry.coordinates:
             pixel_index = coordinate.index
             index = self.bytesize * pixel_index
-            for _, instance in self.patterns_with_instances(run):
+            for pattern, instance in self.visible_patterns_with_instances(run):
                 pixel = instance.pixels[pixel_index]
                 if pixel is None:
-                    pass
                     continue
                 mix = sqrt(0.01 * pixel.v) if pixel.v > 0 else 0
                 rgb = pixel.to_float_rgb()
@@ -172,3 +177,16 @@ class SequenceState:
         copy.patterns = [pattern]
         copy.initialize_working_arrays()
         return copy
+
+    def update_pattern_visibility(self, id, show_solo: Optional[float] = None, hidden: Optional[float] = None):
+        if show_solo is False:
+            self.solo_pattern_id = None
+
+        pattern = self.get_pattern(id)
+        if pattern is None:
+            raise KeyError(f"Pattern not found with id {id}")
+        print(f"Apply now to pattern {id=}, {show_solo=}, {hidden=}")
+        if show_solo is True:
+            self.solo_pattern_id = id
+        if hidden is not None:
+            pattern.hidden = hidden

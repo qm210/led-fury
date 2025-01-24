@@ -1,12 +1,14 @@
 import {useEffect} from "preact/hooks";
 import {synchronizedSetup} from "./setup.js";
 import {segmentEdits} from "./segments.js";
-import {selectedPatternId} from "./pattern.js";
-import {useRef} from "react";
+import {findPatternById, selectedPatternId, synchronizedPatterns} from "./pattern.js";
+import {useCallback, useRef} from "react";
+import {useState} from "preact/compat";
 
 
 export const selectedPatternStorageKey = "led.fury.selected.pattern";
 export const setupStorageKey = "led.fury.edits.setup";
+export const debugCollapsedKey = "led.fury.debug.collapsed";
 
 
 export const loadSetupFromStorage = (id) => {
@@ -33,8 +35,8 @@ export const loadSetupFromStorage = (id) => {
     }
 };
 
-export const loadFromStorage = (key) => {
-    const stored = localStorage.getItem(key);
+export const loadFromStorage = (key, storage = localStorage) => {
+    const stored = storage.getItem(key);
     if (!stored) {
         return undefined;
     }
@@ -61,10 +63,45 @@ export const useStorageForSelectedPatternId = () => {
 
     useEffect(() => {
         const stored = loadFromStorage(selectedPatternStorageKey);
-        if (stored) {
+        if (stored && findPatternById(stored)) {
             selectedPatternId.value = stored;
         }
         initialized.current = true;
     }, []);
 
+};
+
+export const useSessionStoredState = (key, initialValue) => {
+    const [state, setStateInternally] = useState(initialValue);
+    const initialized = useRef(false);
+    const wasTouched = useRef(false);
+
+    const setState = useCallback((arg) => {
+        setStateInternally(arg);
+        wasTouched.current = true;
+    }, []);
+
+    const setStateWhenPreviouslyTouched = useCallback((arg) => {
+        if (!wasTouched.current) {
+            return;
+        }
+        setStateInternally(arg);
+    }, [])
+
+    useEffect(() => {
+        if (!initialized.current) {
+            return;
+        }
+        sessionStorage.setItem(key, JSON.stringify(state));
+    }, [state]);
+
+    useEffect(() => {
+        const stored = loadFromStorage(key, sessionStorage);
+        if (stored) {
+            setStateInternally(stored);
+        }
+        initialized.current = true;
+    }, []);
+
+    return [state, setState, setStateWhenPreviouslyTouched];
 };

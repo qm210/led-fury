@@ -21,29 +21,29 @@ export default QueryInitializer;
 const QueryFetcher = ({children}) => {
     // because the <Suspense .../> way didn't quite work, we implement our own.
     const [initialized, setInitialized] = useState(false);
-    const {data: {data}} = useOverallState();
+    const {state} = useOverallState();
 
     useEffect(() => {
-        if (!data.patterns) {
+        if (!state.patterns) {
             return;
         }
-        synchronizedPatterns.value = data.patterns;
+        synchronizedPatterns.value = state.patterns;
         if (!selectedPattern.value) {
-            selectedPatternId.value = data.selected?.pattern ?? data.patterns[0]?.id ?? null;
+            selectedPatternId.value = state.selected?.pattern ?? state.patterns[0]?.id ?? null;
         }
-    }, [data.patterns])
+    }, [state.patterns])
 
     useEffect(() => {
-        if (!data.setup) {
+        if (!state.setup) {
             return;
         }
-        if (!loadSetupFromStorage(data.setup.id)) {
-            synchronizedSetup.value = structuredClone(data.setup);
+        if (!loadSetupFromStorage(state.setup.id)) {
+            synchronizedSetup.value = structuredClone(state.setup);
             segmentEdits.value = [];  // <-- ...want?
         }
         updateCurrentSetupFromEdits()
             .then(() => setInitialized(true));
-    }, [data.setup]);
+    }, [state.setup]);
 
     if (!initialized) {
         return (

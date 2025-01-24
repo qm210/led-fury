@@ -17,7 +17,7 @@ class ManHandler(tornado.web.RequestHandler):
         if origin and origin.startswith("http://localhost"):
             self.set_header("Access-Control-Allow-Origin", origin)
             self.set_header("Access-Control-Allow-Headers", "x-requested-with, content-type")
-            self.set_header("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
+            self.set_header("Access-Control-Allow-Methods", "GET, POST, DELETE, PUT, PATCH, OPTIONS")
 
     def options(self, *_args):
         self.set_status(204)

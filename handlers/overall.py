@@ -11,9 +11,8 @@ class OverallStateHandler(ManHandler):
             "frame": state.selected_frame or 0,
             "pattern": state.selected_pattern,
             "pos": state.selected_pos or [0, 0],
+            "soloPatternId": state.solo_pattern_id,
         }
-        if not state.selected_pattern and len(state.patterns) > 0:
-            selected["pattern"] = state.patterns[0].id
         result = {
             "patterns": state.patterns,
             "setup": self.man.setup,

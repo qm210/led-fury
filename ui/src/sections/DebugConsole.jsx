@@ -1,9 +1,10 @@
-import {useOverallRuns, useOverallState} from "../api/api.js";
+import {useOverallState} from "../api/api.js";
 import {useEffect, useState, useCallback} from "react";
 import {segmentEdits} from "../signals/segments.js";
 import {currentSetup, synchronizedSetup} from "../signals/setup.js";
 import {signal} from "@preact/signals";
 import * as Lucide from "lucide-preact";
+import {debugCollapsedKey, useSessionStoredState} from "../signals/storage.js";
 
 
 const debugOverwrite = signal({
@@ -37,17 +38,18 @@ const asLog = (r) => {
 
 
 export const DebugConsole = () => {
-    const {refetch: fetchOverall} = useOverallState({enabled: false});
-    const {refetch: fetchRuns} = useOverallRuns({enabled: false});
+    const {refetch, fetchRuns} = useOverallState({enabled: false});
     const [log, setLog] = useState("");
-    const [enabled, setEnabled] = useState({
-        segments: false
-    });
-    const [collapsed, setCollapsed] = useState(true);
+    const [enabled, setEnabled] =
+        useState({
+            segments: false
+        });
+    const [collapsed, setCollapsed, setCollapsedIfTouchedBefore] =
+        useSessionStoredState(debugCollapsedKey, true);
 
     useEffect(() => {
         if (log) {
-            setCollapsed(false);
+            setCollapsedIfTouchedBefore(false);
         }
     }, [log]);
 
@@ -95,15 +97,15 @@ export const DebugConsole = () => {
     }, [debugOverwrite.value]);
 
     return (
-        <div class="self-stretch p-2 flex flex-col"
+        <div class="self-stretch p-2 flex flex-col gap-2"
              style={{
                  minWidth: "15vw",
                  position: collapsed ? "absolute" : undefined,
                  right: 0,
-                 backgroundColor: "#FFFFFF44",
+                 backgroundColor: "#FFFFFF77",
              }}
         >
-            <div class={"flex flex-row items-end gap-2 text mb-2"}>
+            <div class={"flex flex-row items-center gap-2 text"}>
                 <div>
                     Debug:
                 </div>
@@ -114,16 +116,16 @@ export const DebugConsole = () => {
                     </span>
                 }
                 <span
-                    className={"link"}
+                    className={"debug-link"}
                     onClick={() =>
-                        fetchOverall()
+                        refetch()
                             .then(updateLog("state"))
                     }
                 >
                     State
                 </span>
                 <span
-                    className={"link"}
+                    className={"debug-link"}
                     onClick={() =>
                         fetchRuns()
                             .then(updateLog("runs"))
@@ -132,7 +134,7 @@ export const DebugConsole = () => {
                     Runs
                 </span>
                 <span
-                    className={"link"}
+                    className={"debug-link"}
                     onClick={() => {
                         logSegments();
                         setEnabled(state => ({segments: !state.segments}));

@@ -20,21 +20,24 @@ export const PatternEditor = () => {
     }
 
     return (
-        <div class="flex flex-col">
+        <div class="flex flex-col items-center">
             <div>
                 Selected Pattern: <b>{pattern.name}</b>
             </div>
-            <table class="w-full border-2 rounded-sm border-gray-300">
+            <table class="pattern-editor border-2 rounded-sm border-gray-300">
                 <tbody>
                 <tr>
                     <td>Type</td>
                     <td/>
                     <td>{pattern.type}</td>
-                    <td width={"30%"}>
+                    <td class={"text-left"}>
                         {formatBoundary(pattern.template.boundary)}
                     </td>
                     <td width={"0"}/>
                 </tr>
+                <TypeSpecificInfo
+                    pattern = {pattern}
+                />
                 <EditRow
                     label={"Opacity"}
                     editKey={"alpha"}
@@ -57,15 +60,39 @@ export const PatternEditor = () => {
                         display: x => x.toFixed(2)
                     }}
                 />
-                <tr class="border-t border-2 border-gray-300"/>
-                <TypeSpecificRows/>
+                <tr class="border-t border-gray-300 mb-2" style={{height: 2}}/>
+                <TypeSpecificEditRows
+                    pattern = {pattern}
+                />
                 </tbody>
             </table>
         </div>
     );
 };
 
-const TypeSpecificRows = () => {
+const TypeSpecificInfo = ({pattern}) => {
+    switch (pattern.type) {
+        case "gif":
+            return <>
+                <tr>
+                    <td>Original Info</td>
+                    <td colSpan={2}/>
+                    <td colSpan={2} class={"text-left"}>
+                        <span>
+                            Frames: {pattern.template.n_frames}
+                        </span>
+                        <span>
+                            , Size: {pattern.template.original_width} x {pattern.template.original_height}
+                        </span>
+                    </td>
+                </tr>
+            </>;
+        default:
+            return null;
+    }
+};
+
+const TypeSpecificEditRows = () => {
     const pattern = visiblePattern.value;
     const Rows = {
         "point": PointPatternRows,
@@ -156,7 +183,6 @@ const PointPatternRows = ({area}) => <>
 </>;
 
 const GifPatternRows = () => {
-    // KÜche ist dein TODO
     return <>
         <EditRow
             label={"Frame Delay (sec)"}

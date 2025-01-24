@@ -63,7 +63,6 @@ export const DragNumberInput = ({
         };
 
         const onEnd = () => {
-            console.log("is this on end?", dragState, newValue);
             if (!dragState) {
                 return;
             }
@@ -100,6 +99,7 @@ export const DragNumberInput = ({
             style={{
                 border: "1px solid #ddd",
                 borderRadius: 1,
+                userSelect: "none"
             }}
         />
     )

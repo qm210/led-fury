@@ -2,7 +2,7 @@
 
 .pattern-list {
     display: grid;
-    grid-template-columns: auto 1fr;
+    grid-template-columns: auto 1fr auto;
     grid-auto-rows: min-content;
     grid-auto-flow: dense;
 
@@ -10,6 +10,7 @@
 
     text-align: left;
     white-space: nowrap;
+    font-weight: bold;
 }
 
 .pattern-list__container {
@@ -23,6 +24,18 @@
     --selected-color: #fffc;
 }
 
+table.pattern-editor {
+    & td {
+        padding: 2px 0.5rem;
+    }
+
+    & td:first-of-type {
+        text-align: left;
+        padding-left: 0.25rem;
+        white-space: nowrap;
+    }
+}
+
 .number-input-spinner {
     display: flex;
     flex-direction: row;
@@ -31,7 +44,7 @@
 .number-input-spinner > button {
     border: none;
     border-radius: 0;
-    padding: 0 1rem;
+    padding: 0 0.5rem;
     background-color: silver;
 }
 
@@ -73,6 +86,10 @@
     opacity: 1;
 }
 
+table.setup-table td {
+    padding: 0 0.25rem;
+}
+
 tr.segment-row > td {
     text-align: left;
 }
@@ -81,8 +98,20 @@ tr.segment-row > td:first-of-type {
     padding: 0.25rem;
 }
 
+tr.segment-row > td:last-of-type {
+    padding-right: 0.25rem;
+}
+
 tr.segment-row:not(.details) > td {
     padding-top: 0.25rem;
+}
+
+.segment-row .number-input-spinner > input {
+    width: 3rem;
+}
+
+.segment-row select {
+    width: 100%;
 }
 
 .small-icon-button {

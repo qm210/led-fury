@@ -5,7 +5,6 @@ import {shutdownBackend} from "../api/api.js";
 
 export function Header() {
 	const { url } = useLocation();
-
 	return (
 		<header>
 			<nav>

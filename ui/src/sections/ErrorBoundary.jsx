@@ -1,34 +1,34 @@
 import {useEffect, useErrorBoundary} from "preact/hooks";
-import {backendBroken} from "../signals/app.js";
 import * as Lucide from "lucide-preact";
 import {patternEdits, selectedPattern} from "../signals/pattern.js";
 import {currentGeometry, currentSetup, synchronizedSetup} from "../signals/setup.js";
 import {segmentEdits} from "../signals/segments.js";
-import axios from "axios";
 import {useOverallState} from "../api/api.js";
+import {backendBroken} from "../signals/backend.js";
 
 
-const useReconnectionEffect = (resetError) => {
-    const overallQuery = useOverallState(
+const useReconnectionEffect = () => {
+    const {isError} = useOverallState(
         {
             enabled: !!backendBroken.value,
+            suspense: false,
             retry: () => backendBroken.value,
             retryDelay: 3000,
         });
 
     useEffect(() => {
-        if (!overallQuery.isError) {
-            resetError();
+        if (!isError) {
             backendBroken.value = false;
         }
-    }, [overallQuery.isError]);
+    }, [isError]);
 
     return null;
 };
 
 const ErrorBoundary = ({children}) => {
     const [error, resetError] = useErrorBoundary();
-    useReconnectionEffect(resetError);
+
+    useReconnectionEffect();
 
     if (backendBroken.value) {
         return (

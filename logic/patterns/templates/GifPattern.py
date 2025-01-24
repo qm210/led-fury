@@ -1,12 +1,14 @@
 from dataclasses import dataclass, field
 from math import floor
-from typing import Optional, TYPE_CHECKING
+from pathlib import Path
+from typing import Optional, TYPE_CHECKING, Tuple
 
 import numpy as np
 import cv2
 from PIL import Image, ImageSequence
 from numpy.typing import NDArray
 from tornado import gen
+from tornado.log import app_log
 
 from logic.color import HsvColor
 from logic.geometry.calculate import Geometry
@@ -18,18 +20,27 @@ if TYPE_CHECKING:
     from service.RunState import RunState
 
 
+# we aim at RGB; so...
+n_channels = 3
+
+
 @dataclass
 class GifPattern(PatternTemplate):
     filename: str = field(default_factory=error_factory("filename required"))
     _original_frames: NDArray = field(default_factory=lambda: np.empty((0, 0, 0)))
     resized_frames: Optional[NDArray] = field(default=None)
+    original_width: int = 0
+    original_height: int = 0
+    original_n_bytes: int = 0
+    n_frames: int = 0
+    n_bytes: int = 0
 
     frame_delay_sec: float = 0.1
 
     @classmethod
     @gen.coroutine
-    def import_from(cls, filename: str, geometry=None):
-        with Image.open(filename) as image:
+    def import_from(cls, file: Path, geometry=None):
+        with Image.open(file) as image:
             if image.format != "GIF":
                 raise TypeError(f"GifPattern must import from an actual GIF, not {image.format}")
             frames = []
@@ -39,13 +50,17 @@ class GifPattern(PatternTemplate):
                     np.array(
                         frame.copy().convert('RGB').getdata(),
                         dtype=np.uint8
-                    ).reshape(width, height, 3)
+                    ).reshape(width, height, n_channels)
                 )
         result = cls(
-            filename=filename,
+            filename=file.name,
             _original_frames=np.array(frames),
             resized_frames=None,
+            original_width=width,
+            original_height=height,
+            n_frames=len(frames),
         )
+        result.orignal_width = result._original_frames.nbytes
         if geometry is not None:
             result.apply_geometry(geometry)
         return result
@@ -60,21 +75,24 @@ class GifPattern(PatternTemplate):
 
     def apply_geometry(self, geometry: Geometry):
         super().apply_geometry(geometry)
-        width, height = geometry.rect.size
-        n_frames, original_width, original_height, n_channels = self._original_frames.shape
+        try:
+            self.update_resized(geometry.rect.size)
+        except Exception as exc:
+            app_log.error(f"Error resizing GIF: {str(exc)}")
 
-        self.resized_frames = np.zeros((n_frames, width, height, n_channels))
-        for f in range(n_frames):
+    def update_resized(self, size: Tuple[int, int]):
+        width, height = size
+        self.resized_frames = np.zeros((self.n_frames, width, height, n_channels))
+        for f in range(self.n_frames):
             for ch in range(n_channels):
                 frame = self._original_frames[f, :, :, ch]
                 resized_frame = cv2.resize(
                     frame,
-                    dsize=(width, height),
+                    dsize=(height, width),
                     interpolation=cv2.INTER_CUBIC
                 )
                 self.resized_frames[f, :, :, ch] = resized_frame
-
-        print("Resized frames, nbytes are", self._original_frames.nbytes, "resized:", self.resized_frames.nbytes)
+        self.n_bytes = self.resized_frames.nbytes
 
     def spawn_instance_state(self):
         return GifPatternState.init_from(self)

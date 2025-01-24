@@ -17,7 +17,7 @@ export const ControlButtons = () => {
     }
 
     return (
-        <div class={"flex justify-stretch items-stretch"}>
+        <div class={"flex justify-stretch items-stretch p-2"}>
             <ActionButtons
                 actions={[
                     {

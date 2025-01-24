@@ -3,8 +3,6 @@ import {currentGeometry, updateCurrentSetupFromEdits} from "./setup.js";
 import {submitPatternEdits} from "./pattern.js";
 import {cloneDebug, logComparison} from "./debug.js";
 
-export const backendBroken = signal(false);
-
 export const pendingOverlay = signal(false);
 
 export const synchronize = async (forceRecalcGeometry = false) => {

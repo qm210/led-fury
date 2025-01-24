@@ -8,7 +8,7 @@ from logic.patterns.instance import PatternInstance
 from logic.patterns.template import PatternTemplate
 from logic.patterns.templates.GifPattern import GifPattern
 from logic.patterns.templates.PointPattern import PointPattern
-from logic.time import current_timestamp
+from logic.time import current_timestamp, precise_timestamp
 
 
 class PatternType(Enum):
@@ -21,14 +21,16 @@ class Pattern:
     template: PatternTemplate
     type: PatternType
 
-    id: str = field(default_factory=current_timestamp)
+    id: str = field(default_factory=precise_timestamp)
     name: str = ""
 
     start_sec: float = 0
     stop_sec: Optional[float] = None
     respawn_sec: Optional[float] = None
     max_instances: int = 10
+
     opacity: float = 1
+    hidden: bool = None
 
     @classmethod
     def from_json(cls, stored: dict):
@@ -46,12 +48,16 @@ class Pattern:
             stop_sec=stored.get("stop_sec"),
             respawn_sec=stored.get("respawn_sec"),
         )
-        if stored.get("id") is not None:
+        if "id" in stored:
             result.id = stored["id"]
             result.name = result.name or result.id
-        if stored.get("name") is not None:
+        if "name" in stored:
             result.name = stored["name"]
-        if stored.get("max_instances") is not None:
+        if "opacity" in stored:
+            result.opacity = stored["opacity"]
+        if "hidden" in stored:
+            result.hidden = stored["hidden"]
+        if "max_instances" in stored:
             result.max_instances = stored["max_instances"]
         return result
 
@@ -83,5 +89,7 @@ class Pattern:
                 t.fade = float(value)
             case "at_behaviour":
                 t.at_boundary[dim] = BoundaryBehaviour(value)
+            case "delay":
+                t.frame_delay_sec = float(value)
             case _:
                 raise KeyError(f"Unknown Key: {key} {dim} {subkeys} => {value}")

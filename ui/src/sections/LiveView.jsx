@@ -1,6 +1,5 @@
-import {useSequenceApi} from "../api/api.js";
 import {useWebSocket} from "../api/useWebSocket.js";
-import {useEffect, useMemo, useState} from "react";
+import {useEffect, useMemo, useRef, useState, useCallback} from "react";
 import Loader from "../utils/Loader.jsx";
 import {signal} from "@preact/signals";
 import {currentGeometry} from "../signals/setup.js";
@@ -28,9 +27,41 @@ const setHover = (segment = null, index = null, color = null) => {
     };
 };
 
+const useHeightResponsiveRef = () => {
+    const [dimensions, setDimensions] = useState({
+        initialized: false,
+        height: null,
+    });
+    const ref = useRef(null);
+
+    const adjustHeight = useCallback(() => {
+        const rect = ref.current?.getBoundingClientRect();
+        setDimensions({
+            height: rect?.height ?? null,
+            initialized: true
+        });
+    }, []);
+
+    useEffect(() => {
+        if (!ref.current || dimensions.initialized) {
+            return;
+        }
+        adjustHeight();
+        window.addEventListener("resize", adjustHeight);
+        return () => {
+            window.removeEventListener("resize", adjustHeight);
+        }
+    }, [adjustHeight, dimensions.initialized]);
+
+    return {
+        ...dimensions,
+        ref
+    };
+};
 
 export const LiveView = () => {
     const {geometry, segments} = currentGeometry.value;
+    const {ref, height} = useHeightResponsiveRef();
 
     if (!geometry) {
         return (
@@ -42,7 +73,30 @@ export const LiveView = () => {
         );
     }
 
-    const viewbox = useMemo(() => {
+    return (
+        <LiveViewArea>
+            <div class={"flex flex-row w-full h-full items-start justify-center"}
+                ref={ref}
+            >
+                {
+                    height &&
+                    <PixelSvg
+                        segments={segments}
+                        geometry={geometry}
+                        height={height}
+                    />
+                }
+            </div>
+            <HoverInfo
+                segments={segments}
+            />
+        </LiveViewArea>
+    );
+};
+
+const PixelSvg = ({segments, geometry, height}) => {
+
+    const viewBox = useMemo(() => {
         const rect = geometry.rect;
         return [
             rect.x - 1.5,
@@ -53,26 +107,21 @@ export const LiveView = () => {
     }, [geometry.rect])
 
     return (
-        <LiveViewArea>
-            <svg
-                width={"100%"}
-                height={"50vh"}
-                viewBox={viewbox}
-                preserveAspectRatio="xMidYMid"
-                pointerEvents="all"
-            >
-                {segments.map((segment, index) =>
-                    <SegmentLiveView
-                        segment={segment}
-                        geometry={geometry}
-                        key={index}
-                    />
-                )}
-            </svg>
-            <HoverInfo
-                segments={segments}
-            />
-        </LiveViewArea>
+        <svg
+            width={"100%"}
+            height={height}
+            viewBox={viewBox}
+            preserveAspectRatio="xMidYMid meet"
+            pointerEvents="all"
+        >
+            {segments.map((segment, index) =>
+                <SegmentLiveView
+                    segment={segment}
+                    geometry={geometry}
+                    key={index}
+                />
+            )}
+        </svg>
     );
 };
 
@@ -85,6 +134,7 @@ const LiveViewArea = ({children, ...props}) =>
 
 
 const HoverInfo = ({segments}) => {
+
     const info = useMemo(() => {
         if (!hover.value?.segment) {
             return "";

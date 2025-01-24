@@ -19,11 +19,11 @@ export const EditSegments = () => {
             <div>
                 Setup
             </div>
-            <table class="w-full border-2 rounded-sm border-gray-300">
+            <table class="setup-table w-full border-2 rounded-sm border-gray-300">
                 <tbody>
                 <tr className="border-t border-2 border-gray-300">
                     <td class={"whitespace-nowrap text-left"}>
-                        WLED Host
+                        WLED Host:
                     </td>
                     <td colSpan={3}>
                         {setup.host}{"\u2009:\u2009"}{setup.port}
@@ -78,9 +78,6 @@ const SegmentEditor = ({segment, index, segments}) => {
                 />
             </td>
             <td>
-                Shape:
-            </td>
-            <td>
                 <OptionSelector
                     optionsKey={"SegmentShape"}
                     value={segment.shape}
@@ -108,14 +105,12 @@ const SegmentEditor = ({segment, index, segments}) => {
                     </div>
                 </td>
                 <td>
-                    Alternating?
-                </td>
-                <td style={{textAlign: "left"}}>
                     <Checkbox
                         checked={segment.alternating}
                         onChange={checked =>
                             applySegmentEdit(makeKey("alt"), checked)
                         }
+                        labelLeft = {"Alternating?"}
                     />
                 </td>
             </tr>

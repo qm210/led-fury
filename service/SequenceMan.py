@@ -1,8 +1,13 @@
 from contextlib import contextmanager
+from pathlib import Path
+from tempfile import mkdtemp
 from typing import Optional, List, Tuple, Union
 
 from tornado import gen
+from tornado.httputil import HTTPFile
+from tornado.ioloop import IOLoop
 
+from app.file_system import ensure_path
 from handlers.websocket import WebSocketHandler
 from logic.patterns.templates.GifPattern import GifPattern
 from logic.patterns.pattern import Pattern, PatternType
@@ -27,7 +32,9 @@ class SequenceMan:
     sender: Optional[UdpSender] = None
     run: RunState
 
-    def __init__(self, verbose=False):
+    gif_store_path: Path
+
+    def __init__(self, verbose=False, gif_store_path: str = ""):
         self.setup = ControllerSetup(
             host=CONTROLLER_HOST,
             port=CONTROLLER_PORT,
@@ -35,8 +42,12 @@ class SequenceMan:
                 PixelSegment(66)
             ]
         )
-        self.state = SequenceState.make(self.setup, verbose)
+        self.state = SequenceState.make(
+            self.setup,
+            verbose=verbose,
+        )
         self.run = RunState()
+        self.gif_store_path = ensure_path(gif_store_path, "led_fury_gif_store")
 
     def make_sender(self):
         return UdpSender.make(self.setup)
@@ -78,7 +89,7 @@ class SequenceMan:
 
     def shuffle_pattern_colors(self):
         print("shuffle pattern colors because it is fun.")
-        for pattern, instance in self.state.patterns_with_instances(self.run):
+        for pattern, instance in self.state.visible_patterns_with_instances(self.run):
             instance.state.color.randomize(
                 h=pattern.template.hue_delta,
                 s=pattern.template.sat_delta,
@@ -174,18 +185,54 @@ class SequenceMan:
             return self.state.apply_pattern_edit_jsons(edits)
 
     @gen.coroutine
-    def import_gif_pattern(self, filename):
-        template = yield GifPattern.import_from(filename, self.state.geometry)
+    def import_gif_pattern(self, filepath: Path):
+        template = yield GifPattern.import_from(filepath, self.state.geometry)
         pattern = Pattern(
             template=template,
             type=PatternType.Gif,
-            name=filename,
+            name=filepath.name,
             max_instances=1,
         )
         for index, p in enumerate(self.state.patterns):
-            if p.type is PatternType.Gif and p.template.filename == filename:
+            if p.type is PatternType.Gif and p.template.filename == filepath.name:
                 self.state.patterns[index] = pattern
                 break
         else:
             self.state.patterns.append(pattern)
         return pattern
+
+    @gen.coroutine
+    def handle_file_import(self, file: HTTPFile):
+        destination = self.gif_store_path / file.filename
+        with open(destination, "wb") as fh:
+            fh.write(file.body)
+        return destination
+
+    @gen.coroutine
+    def handle_gif_import(self, files, render_second = None):
+        patterns = []
+        for file in files:
+            if isinstance(file, HTTPFile):
+                local_filepath = yield self.handle_file_import(file)
+            elif isinstance(file, str):
+                local_filepath = Path(file)
+            else:
+                raise ValueError(f"GIF Import failed due to not knowing what format that is: {file}")
+            try:
+                pattern = yield self.import_gif_pattern(local_filepath)
+                patterns.append(pattern)
+            except Exception as exc:
+                raise FileNotFoundError(f"GIF Import failed: {local_filepath}, error: {str(exc)}") from exc
+
+        rgb_arrays = None
+        if render_second is not None and not self.running:
+            rgb_arrays = {}
+            # if ever important - find out how to do that in parallel.
+            for pattern in patterns:
+                rgb_arrays[pattern.id] = \
+                    yield self.render_single_pattern(
+                        second=render_second,
+                        pattern=pattern
+                    )
+
+        return {'patterns': patterns, 'rgbArrays': rgb_arrays}

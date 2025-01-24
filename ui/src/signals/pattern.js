@@ -57,3 +57,6 @@ export const submitPatternEdits = async () => {
         overwriteDebug("Pattern Update Errors", res.data.errors);
     }
 };
+
+export const findPatternById = (id) =>
+    synchronizedPatterns.value.find(p => p.id === id);

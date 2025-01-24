@@ -20,7 +20,11 @@ from service.SequenceMan import SequenceMan
 
 
 class Application(tornado.web.Application):
-    def __init__(self, verbose=False, **kwargs):
+    def __init__(self, options, **kwargs):
+        verbose = options.verbose
+        load_file = options.file
+        gif_store = options.gif_store
+
         super().__init__(
             handlers=[
                 (r"/", MainHandler),
@@ -56,12 +60,18 @@ class Application(tornado.web.Application):
             # static_path=os.path.join(os.path.dirname(__file__), "ui/dist/")
             **kwargs
         )
-        self.man = SequenceMan(verbose)
+        self.man = SequenceMan(
+            verbose=verbose,
+            gif_store_path=gif_store
+        )
         self.shutdown_event = asyncio.Event()
         self.recent_filename = ""
 
         tornado.log.enable_pretty_logging()
         tornado.log.app_log.setLevel(DEBUG)
+
+        if load_file:
+            self.load_state(options.file)
 
     def load_state(self, filename):
         try:
