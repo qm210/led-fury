@@ -35,20 +35,29 @@ class PatternEditHandler(ManHandler):
 class PatternGifHandler(ManHandler):
     @gen.coroutine
     def post(self):
+        body = self.body()
+        files = self.request.files
+        file = files = self.request.files.get("file", None)
+        render_second = self.get_argument("renderSecond")
         # TODO: get file from upload
-        pattern = yield self.man.import_gif_pattern("./sample.gif")
+
+        test_filename = "./sample_files/supergif.gif"
+
+        pattern = yield self.man.import_gif_pattern(test_filename)
+        if render_second is not None and not self.man.running:
+            rgb_array = yield self.man.render_single_pattern(
+                second=render_second,
+                pattern=pattern
+            )
+            # just monkey-patch the values on there for now... =´)
+            pattern.rgb_values = rgb_array
         self.write(pattern)
 
 
 class PatternHandler(ManHandler):
-    """
-    not used anymore, I believe (TODO: check that.)
-    """
-    def get(self, id):
-        self.write(
-            self.man.state.get_pattern(id)
-        )
+    # def post(self, _id):
+    #     body = self.body()
+    #     self.man.upsert_pattern(body)
 
-    def post(self, _id):
-        body = self.body()
-        self.man.upsert_pattern(body)
+    def delete(self, id):
+        self.man.delete_pattern(id)

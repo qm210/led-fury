@@ -4,12 +4,9 @@ import {storeToFile, useSequenceApi} from "../api/api.js";
 import {synchronizedPatterns} from "../signals/pattern.js";
 import {ActionButton, ActionButtons} from "../components/ActionButtons.jsx";
 import {SpinNumberInput} from "../components/SpinNumberInput.jsx";
-import {signal} from "@preact/signals";
 import {useState} from "react";
 import {synchronize} from "../signals/app.js";
-
-
-const currentSecond = signal(0);
+import {currentSecond} from "../signals/sequence.js";
 
 
 export const ControlButtons = () => {

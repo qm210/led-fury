@@ -20,5 +20,5 @@ export const isColorBright = (rgbColorString) => {
         return false;
     }
     const sum = match.slice(1, 4).reduce((sum, value) => sum + (+value), 0);
-    return sum > 300;
+    return sum > 200;
 };

@@ -36,6 +36,17 @@ export const PatternEditor = () => {
                     <td width={"0"}/>
                 </tr>
                 <EditRow
+                    label={"Opacity"}
+                    editKey={"alpha"}
+                    getDefault={p => p.opacity}
+                    numeric={{
+                        min: 0,
+                        max: 200,
+                        scale: 100,
+                        display: x => x.toFixed(2)
+                    }}
+                />
+                <EditRow
                     label={"Fade Factor"}
                     editKey={"fade"}
                     getDefault={p => p.template.fade}
@@ -147,6 +158,18 @@ const PointPatternRows = ({area}) => <>
 const GifPatternRows = () => {
     // KÜche ist dein TODO
     return <>
+        <EditRow
+            label={"Frame Delay (sec)"}
+            editKey={"delay"}
+            getDefault={(p, d) =>
+                p.template.frame_delay_sec
+            }
+            numeric={{
+                min: 0.05,
+                step: 0.05,
+            }}
+            resetValue = {1}
+        />
         <tr>
             <td colSpan={99} className={"opacity-20"}>Küche ist dein TODO</td>
         </tr>

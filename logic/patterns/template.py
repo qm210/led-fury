@@ -28,3 +28,6 @@ class PatternTemplate(abc.ABC):
                 x=Range.copy(geometry.area.x),
                 y=Range.copy(geometry.area.y)
             )
+
+    def spawn_instance_state(self):
+        pass

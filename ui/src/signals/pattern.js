@@ -25,12 +25,6 @@ export const selectedPattern = computed(() =>
     )
 );
 
-export const hoveredPattern = computed(() =>
-    synchronizedPatterns.value.find(
-        p => p.id === hoveredPatternId.value
-    )
-);
-
 export const visiblePattern = computed(() =>
     synchronizedPatterns.value.find(
         p => p.id === visiblePatternId.value

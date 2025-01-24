@@ -91,6 +91,12 @@ class Range:
     def copy(cls, range):
         return cls(min=range.min, max=range.max)
 
+    @property
+    def interval(self):
+        min = -math.inf if self.min is None else self.min
+        max = +math.inf if self.max is None else self.max
+        return min, max
+
 
 @dataclass
 class Area:
@@ -128,13 +134,6 @@ class Area:
             y=Range.from_json(y_range)
         )
 
-    @property
-    def size(self):
-        return (
-            int(math.ceil(self.x.max - self.x.min)),
-            int(math.ceil(self.y.max - self.y.min))
-        )
-
 
 @dataclass
 class Rect:
@@ -150,4 +149,11 @@ class Rect:
             y=area.y.min,
             width=area.x.max - area.x.min + extend,
             height=area.y.max - area.y.min + extend,
+        )
+
+    @property
+    def size(self):
+        return (
+            math.ceil(self.width),
+            math.ceil(self.height)
         )

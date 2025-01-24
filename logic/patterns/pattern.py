@@ -4,6 +4,7 @@ from typing import Optional, Any
 
 from logic.color import HsvColor
 from logic.patterns import BoundaryBehaviour
+from logic.patterns.instance import PatternInstance
 from logic.patterns.template import PatternTemplate
 from logic.patterns.templates.GifPattern import GifPattern
 from logic.patterns.templates.PointPattern import PointPattern
@@ -27,6 +28,7 @@ class Pattern:
     stop_sec: Optional[float] = None
     respawn_sec: Optional[float] = None
     max_instances: int = 10
+    opacity: float = 1
 
     @classmethod
     def from_json(cls, stored: dict):
@@ -56,28 +58,30 @@ class Pattern:
     def update_from_edit_json(self, key: str, dim: int = 0, subkeys: list = None, value: Any = None):
         if self.type is not PatternType.Point:
             raise ValueError(f"Cannot Update Pattern of unknown type: {self.type.value}")
-        template = self.template
+        t = self.template
         match key:
+            case "alpha":
+                self.opacity = float(value)
             case "pos":
-                template.pos[dim] = float(value)
+                t.pos[dim] = float(value)
             case "vel":
-                template.motion[dim].vel = abs(float(value))
-                template.motion[dim].sign = -1 if float(value) < 0 else +1
+                t.motion[dim].vel = abs(float(value))
+                t.motion[dim].sign = -1 if float(value) < 0 else +1
             case "acc":
-                template.motion[dim].acc = float(value)
+                t.motion[dim].acc = float(value)
             case "size":
-                template.size[dim] = float(value)
+                t.size[dim] = float(value)
             case "color":
-                template.color = HsvColor.from_json(value)
+                t.color = HsvColor.from_json(value)
             case "deltaHue":
-                template.hue_delta = int(value)
+                t.hue_delta = int(value)
             case "deltaSat":
-                template.sat_delta = int(value)
+                t.sat_delta = int(value)
             case "deltaVal":
-                template.val_delta = int(value)
+                t.val_delta = int(value)
             case "fade":
-                template.fade = float(value)
+                t.fade = float(value)
             case "at_behaviour":
-                template.at_boundary[dim] = BoundaryBehaviour(value)
+                t.at_boundary[dim] = BoundaryBehaviour(value)
             case _:
                 raise KeyError(f"Unknown Key: {key} {dim} {subkeys} => {value}")

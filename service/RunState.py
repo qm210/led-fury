@@ -5,11 +5,10 @@ from enum import Enum
 from time import perf_counter
 from typing import Optional, List, TYPE_CHECKING
 
+from tornado import gen
 from tornado.ioloop import PeriodicCallback
 
 from logic.color import apply_fade, HsvColorArray
-from logic.patterns.templates.GifPattern import GifPattern, GifPatternState
-from logic.patterns.templates.PointPattern import PointPatternState, PointPattern
 from logic.patterns.instance import PatternInstance
 
 if TYPE_CHECKING:
@@ -91,13 +90,8 @@ class RunState:
         instances = self.pattern_instances[pattern.id]
         if len(instances) >= pattern.max_instances:
             return
-
-        if isinstance(pattern.template, PointPattern):
-            instance_state = PointPatternState.init_from(pattern.template)
-        elif isinstance(pattern.template, GifPattern):
-            # TODO
-            instance_state = GifPatternState()
-        else:
+        instance_state = pattern.template.spawn_instance_state()
+        if instance_state is None:
             raise ValueError("Cannot spawn instance of pattern yet... srylol")
 
         self.pattern_instances[pattern.id].append(
@@ -109,3 +103,16 @@ class RunState:
                 spawned_sec=self.current_sec,
             )
         )
+
+    @gen.coroutine
+    def seek(self, state: "SequenceState"):
+        # this modifies the patterns inside the given state
+        self.initialize(seek=True)
+        cursor = 0
+        dt = 0.001 * state.update_ms
+        while cursor <= state.seek_second:
+            self.proceed(state)
+            self.update_times(second=cursor)
+            cursor += dt
+        cursor -= dt
+        return cursor

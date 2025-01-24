@@ -12,7 +12,7 @@ import './styles/components.css';
 import QueryInitializer from "./sections/QueryInitializer.jsx";
 
 
-const queryClient = new QueryClient({
+export const queryClient = new QueryClient({
 	defaultOptions: {
 		queries: {
 			timeout: 5000

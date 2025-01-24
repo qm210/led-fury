@@ -1,9 +1,10 @@
 import {hoveredPatternId, selectedPattern, selectedPatternId, synchronizedPatterns} from "../signals/pattern.js";
 import {ActionButtons} from "../components/ActionButtons.jsx";
 import * as Lucide from "lucide-preact";
-import {importGifPattern} from "../api/api.js";
+import {deletePattern, importGifPattern, invalidateOverall} from "../api/api.js";
 import {TRIANGLE_RIGHT} from "../utils/constants.jsx";
 import {useStorageForSelectedPatternId} from "../signals/storage.js";
+import {currentRgbArray, currentSecond} from "../signals/sequence.js";
 
 export const PatternSelector = () => {
     const patterns = synchronizedPatterns.value;
@@ -52,15 +53,28 @@ export const PatternSelector = () => {
                     }, {
                         element: Lucide.ImagePlus,
                         tooltip: "Add GIF Pattern",
-                        onClick: () =>
-                            importGifPattern()
-                                .then(console.log)
+                        onClick: async () => {
+                            const res = await importGifPattern({
+                                renderSecond: currentSecond.value
+
+                            });
+                            selectedPatternId.value = res?.id ?? null;
+                            if (res.rgb_values) {
+                                currentRgbArray.value = res.rgb_values; 
+                            }
+                            await invalidateOverall();
+                        },
                     }, {
                         element: Lucide.Trash2,
                         tooltip: `Delete Pattern "${selectedPattern.value?.name}"`,
                         disabled: !selectedPattern.value || patterns.length < 2,
-                        onClick: () => {
-                            alert("not implemented yet...");
+                        onClick: async () => {
+                            const index = patterns.indexOf(selectedPattern.value);
+                            await deletePattern(selectedPattern.value.id);
+                            selectedPatternId.value =
+                                patterns[index - 1]?.id
+                                    ?? patterns[0]?.id
+                                    ?? 0;
                         },
                         style: {
                             marginLeft: "auto"

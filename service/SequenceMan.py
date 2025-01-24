@@ -1,5 +1,5 @@
 from contextlib import contextmanager
-from typing import Optional, List, Tuple
+from typing import Optional, List, Tuple, Union
 
 from tornado import gen
 
@@ -35,7 +35,7 @@ class SequenceMan:
                 PixelSegment(66)
             ]
         )
-        self.state = SequenceState(self.setup, verbose)
+        self.state = SequenceState.make(self.setup, verbose)
         self.run = RunState()
 
     def make_sender(self):
@@ -71,7 +71,7 @@ class SequenceMan:
             self.setup.update_from(stored_setup)
         stored_state = stored.get("state")
         if stored_state is not None:
-            self.state = SequenceState(self.setup)
+            self.state = SequenceState.make(self.setup)
             self.state.update_from(stored_state)
             self.run = RunState()
         self.apply_setup_change()
@@ -116,20 +116,21 @@ class SequenceMan:
         if self.running:
             self.stop_sequence()
         self.state.seek_second = second
-        self.run.initialize(seek=True)
-
-        cursor = 0
-        dt = 0.001 * self.state.update_ms
-        while cursor <= second:
-            self.run.proceed(self.state)
-            self.run.update_times(second=cursor)
-            cursor += dt
-        cursor -= dt
-
+        reached_second = yield self.run.seek(self.state)
         self.state.render(self.run)
         if broadcast:
             self.broadcast_colors()
-        return cursor
+        return reached_second
+
+    @gen.coroutine
+    def render_single_pattern(self, pattern: Pattern, second: Union[float, str]):
+        # is like a version of seek_in_sequence with separated state
+        run = RunState()
+        state = self.state.shallow_copy_reduced(pattern=pattern)
+        state.seek_second = float(second)
+        yield run.seek(state)
+        state.render(run)
+        return state.rgb_value_list
 
     @contextmanager
     def sequence_paused_if_running(self):
@@ -149,12 +150,22 @@ class SequenceMan:
 
     def upsert_pattern(self, json: dict):
         new_pattern = Pattern.from_json(json)
-        for p, pattern in enumerate(self.state.patterns):
-            if pattern.id == json.get("id"):
-                self.state.patterns[p] = new_pattern
-                break
-        else:
-            self.state.patterns.append(new_pattern)
+        with self.sequence_paused_if_running():
+            for p, pattern in enumerate(self.state.patterns):
+                if pattern.id == json.get("id"):
+                    self.state.patterns[p] = new_pattern
+                    break
+            else:
+                self.state.patterns.append(new_pattern)
+
+    def delete_pattern(self, id: str):
+        with self.sequence_paused_if_running():
+            self.state.patterns = [
+                p for p in self.state.patterns
+                if p.id != id
+            ]
+            if id in self.run.pattern_instances:
+                del self.run.pattern_instances[id]
 
     def apply_pattern_edits(self, edits: List[dict]) -> Tuple[List[Pattern], List[str]]:
         if not edits:

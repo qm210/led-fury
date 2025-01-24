@@ -1,7 +1,7 @@
 from colorsys import hsv_to_rgb, rgb_to_hsv
 from dataclasses import dataclass
 from random import randint
-from typing import Tuple, Self
+from typing import Tuple, Self, Union, List
 
 import numpy as np
 from numpy.typing import NDArray
@@ -68,28 +68,41 @@ class HsvColor:
         if self.v > 100:
             self.v = 100
 
-    def copy(self):
-        return HsvColor(self.h, self.s, self.v)
+    def copy(self, scale_v: float = 1):
+        return HsvColor(self.h, self.s, scale_v * self.v)
 
-    def add(self, color: Self, factor: float = 1):
-        r0, g0, b0 = self.to_raw_rgb()
-        r1, g1, b1 = color.to_raw_rgb()
-        h, s, v = rgb_to_hsv(
-            r0 + factor * r1,
-            g0 + factor * g1,
-            b0 + factor * b1
-        )
+    def read_float_rgb(self, r: float, g: float, b: float):
+        h, s, v = rgb_to_hsv(r, g, b)
         self.h = 360 * h
         self.s = 100 * s
         self.v = 100 * v
 
-    def to_raw_rgb(self):
+    def add(self, color: Self, factor: float = 1):
+        r0, g0, b0 = self.to_float_rgb()
+        r1, g1, b1 = color.to_float_rgb()
+        self.read_float_rgb(
+            r0 + factor * r1,
+            g0 + factor * g1,
+            b0 + factor * b1
+        )
+
+    def to_float_rgb(self):
         # this returns the [R, G, B] in values 0..1 each
         return hsv_to_rgb(self.h/360, self.s/100, self.v/100)
 
     def to_rgb(self):
-        r, g, b = self.to_raw_rgb()
+        r, g, b = self.to_float_rgb()
         return [255 * r, 255 * g, 255 * b]
+
+    @classmethod
+    def from_rgb(cls, r, g, b, scale: float = 255):
+        result = cls()
+        result.read_float_rgb(
+            r / scale,
+            g / scale,
+            b / scale
+        )
+        return result
 
     @classmethod
     def from_json(cls, json: dict):

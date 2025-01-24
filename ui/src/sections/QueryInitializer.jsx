@@ -28,7 +28,9 @@ const QueryFetcher = ({children}) => {
             return;
         }
         synchronizedPatterns.value = data.patterns;
-        selectedPatternId.value = data.selected?.pattern ?? data.patterns[0]?.id ?? null;
+        if (!selectedPattern.value) {
+            selectedPatternId.value = data.selected?.pattern ?? data.patterns[0]?.id ?? null;
+        }
     }, [data.patterns])
 
     useEffect(() => {

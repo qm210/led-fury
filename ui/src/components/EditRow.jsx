@@ -124,6 +124,7 @@ const EditRowForDimension = ({
                             onChange={value =>
                                 applyEdit(editKey, value / (numeric.scale ?? 1))
                             }
+                            resetValue={defaultValue}
                         />
                         : <DragNumberInput
                             value={currentValue}
@@ -133,6 +134,7 @@ const EditRowForDimension = ({
                             min={numeric.min}
                             max={numeric.max}
                             step={numeric.step}
+                            resetValue={defaultValue}
                         />
                 }
             </td>

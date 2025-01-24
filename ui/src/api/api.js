@@ -1,6 +1,7 @@
-import {useMutation$, useQuery$} from "@preact-signals/query";
+import {useQuery$} from "@preact-signals/query";
 import axios from "axios";
 import {backendBroken} from "../signals/app.js";
+import {queryClient} from "../index.jsx";
 
 
 axios.interceptors.request.use(
@@ -31,7 +32,7 @@ axios.interceptors.response.use(
 
 export const useOverallState = (options = {}) =>
     useQuery$(() => ({
-        queryKey: ["overall/state"],
+        queryKey: ["overall", "state"],
         queryFn: () => axios.get("/overall/state"),
         suspense: true,
         suspenseBehavior: "suspense-eagerly",
@@ -40,14 +41,14 @@ export const useOverallState = (options = {}) =>
 
 export const useOverallRuns = (options = {}) =>
     useQuery$(() => ({
-        queryKey: ["overall/run"],
+        queryKey: ["overall", "runs"],
         queryFn: () => axios.get("/overall/run"),
         ...options,
     }));
 
 export const useOverallOptions = () =>
     useQuery$(() => ({
-        queryKey: ["overall/options"],
+        queryKey: ["options"],
         queryFn: () => axios.get("/overall/options"),
         staleTime: Infinity
     }));
@@ -75,14 +76,27 @@ export const useSequenceApi = (options = {}) => {
     };
 };
 
-export const postPatternEdits = (patternEdits) =>
-    axios.post("/pattern/edits", patternEdits);
+export const invalidateOverall = () =>
+    queryClient.invalidateQueries({queryKey: ["overall"]});
 
-export const importGifPattern = async (file) => {
+export const postPatternEdits = (patternEdits) =>
+    axios.post("/patterns/edits", patternEdits);
+
+export const importGifPattern = async ({file, renderSecond}) => {
     // "file" must come from e.g. document.getElementById('fileInput').files[0];
     const formData = new FormData();
     formData.append('file', file);
-    return axios.post("/pattern/gif", formData);
+    formData.append('renderSecond', renderSecond);
+    const response = await axios.post("/patterns/gif", formData);
+    if (response.status !== 200) {
+        return;
+    }
+    return response.data;
+};
+
+export const deletePattern = async (id) => {
+    await axios.delete("/pattern/" + id);
+    await queryClient.invalidateQueries();
 };
 
 export const updateGeometry = async (segments) => {

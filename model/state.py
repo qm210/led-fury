@@ -1,8 +1,9 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from math import sqrt
 from typing import List, Optional, Tuple
 
 import numpy as np
+from numpy.typing import NDArray
 from tornado.log import app_log
 
 from logic.color import HsvColor, HsvColorArray
@@ -39,16 +40,21 @@ class SequenceState:
     n_pixels: int = 0
     geometry: Optional[Geometry] = None
 
+    # need to be set by a geometry, then stored for performance ideas
+    _rgb_array: Optional[NDArray] = field(default=None)
+    _rgb_list: List[int] = field(default_factory=list)
+
     # TODO: make toggleable via CLI flag or even via frontend
     verbose: bool = True
 
-    def __init__(self, setup: ControllerSetup, verbose: bool = False):
-        self.patterns = []
-        self.selected_pos = []
-        self._rgb_array = np.empty(0, dtype=float)
-        self._rgb_list = []
-        self.apply_setup_change(setup)
-        self.verbose = verbose
+    @classmethod
+    def make(cls, setup: ControllerSetup, verbose: bool = False):
+        result = cls()
+        result.patterns = []
+        result.selected_pos = []
+        result.apply_setup_change(setup)
+        result.verbose = verbose
+        return result
 
     def apply_setup_change(self, setup: ControllerSetup):
         # these are auxliary quantities for intermediate calculations
@@ -58,7 +64,11 @@ class SequenceState:
         self.geometry = GeometryMan.calculate_geometry(setup.segments)
         for pattern in self.patterns:
             pattern.template.apply_geometry(self.geometry)
+        self._rgb_array = self.new_rgb_array()
+        self._rgb_list = []
+        self.initialize_working_arrays()
 
+    def initialize_working_arrays(self):
         self._rgb_array = self.new_rgb_array()
         self._rgb_list = []
 
@@ -107,8 +117,11 @@ class SequenceState:
             index = self.bytesize * pixel_index
             for _, instance in self.patterns_with_instances(run):
                 pixel = instance.pixels[pixel_index]
+                if pixel is None:
+                    pass
+                    continue
                 mix = sqrt(0.01 * pixel.v) if pixel.v > 0 else 0
-                rgb = pixel.to_raw_rgb()
+                rgb = pixel.to_float_rgb()
                 for b in range(self.bytesize):
                     try:
                         self._rgb_array[index + b] = (
@@ -153,3 +166,9 @@ class SequenceState:
             list(updated_patterns.values()),
             edit_man.errors
         ]
+
+    def shallow_copy_reduced(self, pattern: Pattern):
+        copy = replace(self)
+        copy.patterns = [pattern]
+        copy.initialize_working_arrays()
+        return copy

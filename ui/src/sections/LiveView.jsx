@@ -5,6 +5,7 @@ import Loader from "../utils/Loader.jsx";
 import {signal} from "@preact/signals";
 import {currentGeometry} from "../signals/setup.js";
 import {calculateCssColor, isColorBright} from "../utils/colors.js";
+import {currentRgbArray} from "../signals/sequence.js";
 
 
 const hover = signal({
@@ -29,7 +30,6 @@ const setHover = (segment = null, index = null, color = null) => {
 
 
 export const LiveView = () => {
-    const {current} = useSequenceApi();
     const {geometry, segments} = currentGeometry.value;
 
     if (!geometry) {
@@ -65,7 +65,6 @@ export const LiveView = () => {
                     <SegmentLiveView
                         segment={segment}
                         geometry={geometry}
-                        initialValues={current?.values}
                         key={index}
                     />
                 )}
@@ -116,17 +115,12 @@ const HoverInfo = ({segments}) => {
 };
 
 
-const SegmentLiveView = ({segment, geometry, initialValues}) => {
+const SegmentLiveView = ({segment, geometry}) => {
     const {message} = useWebSocket();
-    const [values, setValues] = useState([]);
-
-    useEffect(() => {
-        setValues(initialValues)
-    }, [initialValues]);
 
     useEffect(() => {
         if (message?.rgbValues) {
-            setValues(message.rgbValues);
+            currentRgbArray.value = message.rgbValues;
         }
     }, [message]);
 
@@ -135,7 +129,7 @@ const SegmentLiveView = ({segment, geometry, initialValues}) => {
             <Pixel
                 pixel={c}
                 segment={segment}
-                values={values}
+                values={currentRgbArray.value}
                 key={c.index}
             />
         )}

@@ -57,6 +57,9 @@ class PointPattern(PatternTemplate):
             result.hue_delta = stored["hue_delta"]
         return result
 
+    def spawn_instance_state(self):
+        return PointPatternState.init_from(self)
+
 
 @dataclass
 class PointPatternState(PatternInstanceState):
@@ -86,6 +89,7 @@ class PointPatternState(PatternInstanceState):
                 for m in template.motion
             ],
             color=color,
+            _reference=template,
         )
 
     @staticmethod
@@ -94,34 +98,33 @@ class PointPatternState(PatternInstanceState):
             return
         print(*messages)
 
-    def proceed(self, run: "RunState", template: "PointPattern", verbose=False):
+    def proceed(self, run: "RunState", verbose=False):
         if run.current_sec == 0:
             return
 
+        t = self._reference
         # should all be 2D by now
         for dim in range(len(self.pos)):
-            m = template.motion[dim]
+            m = t.motion[dim]
             shift = m.vel * m.sign * run.delta_sec
             p = self.pos[dim] + shift
-            boundary = template.boundary[dim]
+            min, max = t.boundary.get_axis(dim).interval
 
             if verbose:
-                print("Movement Dim", dim, p, m, shift, boundary, end="")
+                print("Movement Dim", dim, p, m, shift, (min, max), end="")
 
-            if boundary.behaviour is BoundaryBehaviour.Wrap:
-                if not boundary.min <= p <= boundary.max:
-                    span = boundary.max - boundary.min + 1
-                    p = boundary.min + (p % span)
-                    print(" -- Boundary Wrap", p, span, end="")
-            elif boundary.behaviour is BoundaryBehaviour.Bounce:
-                if p > boundary.max:
-                    p = boundary.max
-                    m.sign = -1
-                    print(" -- Boundary Bounce (Max)", p, m, end="")
-                elif p < boundary.min:
-                    p = boundary.min
-                    m.sign = +1
-                    print(" -- Boundary Bounce (Min)", p, m, end="")
+            match t.at_boundary[dim]:
+                case BoundaryBehaviour.Wrap:
+                    if not min <= p <= max:
+                        span = max - min + 1
+                        p = min + (p % span)
+                case BoundaryBehaviour.Bounce:
+                    if p > max:
+                        p = max
+                        m.sign = -1
+                    elif p < min:
+                        p = min
+                        m.sign = +1
 
             self.pos[dim] = p
 
@@ -142,3 +145,7 @@ class PointPatternState(PatternInstanceState):
         # TODO: offer different modes:
         # power_theta = 1 if max(x_power, y_power) <= 1 else 0
         # power_gauss = exp(-x_power*x_power - y_power*y_power)
+
+    def render(self, x: float, y: float) -> HsvColor:
+        intensity = self.get_intensity(x, y)
+        return self.color.copy(scale_v=intensity)
