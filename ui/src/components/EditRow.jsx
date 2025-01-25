@@ -2,7 +2,7 @@ import Slider from "rc-slider";
 import {DragNumberInput} from "./DragNumberInput.jsx";
 import {ColorChooseRow} from "../pattern/ColorChooseRows.jsx";
 import {applyEdit, findEdit, visiblePattern} from "../signals/pattern.js";
-import {OptionSelector} from "./OptionSelector.js";
+import {OptionSelector} from "./OptionSelector.jsx";
 import {is1d} from "../signals/setup.js";
 
 

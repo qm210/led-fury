@@ -2,7 +2,7 @@ import {currentSetup, synchronizedSetup} from "../signals/setup.js";
 import {applySegmentEdit} from "../signals/segments.js";
 import {Checkbox} from "../components/Checkbox.jsx";
 import {SpinNumberInput} from "../components/SpinNumberInput.jsx";
-import {OptionSelector} from "../components/OptionSelector.js";
+import {OptionSelector} from "../components/OptionSelector.jsx";
 
 
 const isNonlinear = s => s.shape !== "linear";
