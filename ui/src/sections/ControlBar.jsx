@@ -9,7 +9,7 @@ import {synchronize} from "../signals/app.js";
 import {currentSecond} from "../signals/sequence.js";
 
 
-export const ControlButtons = () => {
+export const ControlBar = () => {
     const {start, stop} = useSequenceApi();
 
     if (!synchronizedPatterns.value.length) {
@@ -17,7 +17,7 @@ export const ControlButtons = () => {
     }
 
     return (
-        <div class={"flex justify-stretch items-stretch p-2"}>
+        <div class={"flex justify-stretch items-stretch p-2 pl-0"}>
             <ActionButtons
                 actions={[
                     {

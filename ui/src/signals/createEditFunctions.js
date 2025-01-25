@@ -1,11 +1,17 @@
+const joinedKey = (keys) => {
+    if (!(keys instanceof Array)) {
+        return keys;
+    }
+    return keys
+        .filter(x => x !== null && x !== undefined)
+        .join(".");
+};
+
 export const keysMatch = (key1, key2) => {
-    if (key1 instanceof Array) {
-        key1 = key1.join(".");
+    if (key1 === key2) {
+        return true;
     }
-    if (key2 instanceof Array) {
-        key2 = key2.join(".");
-    }
-    return key1 === key2;
+    return joinedKey(key1) === joinedKey(key2);
 };
 
 const createEditFunctions = (editsSignal, selectedIdSignal) => {
@@ -25,9 +31,7 @@ const createEditFunctions = (editsSignal, selectedIdSignal) => {
         editsSignal.value.find(matchingEdit(key));
 
     const applyEdit = (key, value) => {
-        if (key instanceof Array) {
-            key = key.join(".");
-        }
+        key = joinedKey(key);
         const patternId = selectedIdSignal.value;
         const edit = {
             id: [patternId, key].join("."),

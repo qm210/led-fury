@@ -3,7 +3,7 @@ import {ActionButtons} from "../components/ActionButtons.jsx";
 import * as Lucide from "lucide-preact";
 import {importGifPattern, invalidateOverall, useOverallState, usePatternApi} from "../api/api.js";
 import {useStorageForSelectedPatternId} from "../signals/storage.js";
-import {currentRgbArray, currentSecond} from "../signals/sequence.js";
+import {currentRgbArray, currentSecond, updateRgbArray} from "../signals/sequence.js";
 import {usePendingState} from "../api/usePendingState.jsx";
 import {openFileDialog} from "../utils/fileDialog.js";
 
@@ -75,8 +75,7 @@ export const PatternSelector = () => {
                             }
                             selectedPatternId.value = res.patterns.pop().id;
                             if (res.rgbArrays) {
-                                currentRgbArray.value = res.rgbArrays[selectedPatternId.value];
-                                console.log("RGB array now", currentRgbArray.value);
+                                updateRgbArray(res.rgbArrays[selectedPatternId.value]);
                             }
                             await invalidateOverall();
                         },

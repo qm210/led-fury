@@ -8,7 +8,7 @@
     }
 
     .debug-link {
-        @apply link text-white hover:text-[#AACCEE]
+        @apply link text-[#444444] hover:text-[#AACCEE]
     }
 
     .full-column {

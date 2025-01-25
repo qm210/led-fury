@@ -62,8 +62,7 @@ class Pattern:
         return result
 
     def update_from_edit_json(self, key: str, dim: int = 0, subkeys: list = None, value: Any = None):
-        if self.type is not PatternType.Point:
-            raise ValueError(f"Cannot Update Pattern of unknown type: {self.type.value}")
+        # for now, forfeit all type checks, users will find out when they went wrong ;)
         t = self.template
         match key:
             case "alpha":

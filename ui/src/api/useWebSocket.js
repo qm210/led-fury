@@ -9,48 +9,61 @@ const ws = signal({
 });
 const wsMessage = signal(null);
 
+const wsLastMessageAt = signal(null);
+
 const now = () => (new Date()).toLocaleTimeString();
+
+const openWebsocket = () => {
+    if (ws.value.connection || ws.value.pending) {
+        return;
+    }
+    console.log("Opening Websocket to", websocketEndpoint);
+    ws.value = {
+        connection: null,
+        pending: true,
+    };
+    const socket = new WebSocket(websocketEndpoint);
+    socket.onopen = (event) => {
+        ws.value = {
+            connection: socket,
+            pending: false,
+        };
+        console.info("Websocket Opened at", now())
+    };
+    socket.onclose = (event) => {
+        ws.value = {
+            connection: null,
+            pending: false,
+        };
+        console.info("Websocket Closed", now(), event)
+        setTimeout(() => {
+            openWebsocket();
+        }, 2000);
+    };
+    socket.onerror = (error) => {
+        console.error("WebSocket Error", error);
+    }
+    socket.onmessage = (event) => {
+        wsMessage.value = JSON.parse(event.data);
+        wsLastMessageAt.value = Date.now();
+    };
+    return socket;
+};
 
 export const useWebSocket = () => {
 
     useEffect(() => {
-        if (ws.value.connection || ws.value.pending) {
-            return;
+        const socket = openWebsocket();
+        return () => {
+            socket.close();
         }
-
-        console.log("Opening Websocket to", websocketEndpoint);
-        ws.value = {
-            connection: null,
-            pending: true,
-        };
-        const socket = new WebSocket(websocketEndpoint);
-        socket.onopen = (event) => {
-            ws.value = {
-                connection: socket,
-                pending: false,
-            };
-            console.info("Websocket Opened at", now())
-        };
-        socket.onclose = (event) => {
-            ws.value = {
-                connection: null,
-                pending: false,
-            };
-            console.info("Websocket Closed", now(), event)
-        };
-        socket.onerror = (error) => {
-            console.error("WebSocket Error", error);
-        }
-        socket.onmessage = (event) => {
-            // console.log("WebSocket message", event);;
-            wsMessage.value = JSON.parse(event.data);
-        };
     }, []);
 
     return {
         socket: ws.value.connection,
         pending: ws.value.pending,
         message: wsMessage.value,
+        lastMessateAt: wsLastMessageAt.value,
         url: ws.value.connection?.url,
     };
 };

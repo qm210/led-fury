@@ -107,6 +107,15 @@ class SequenceState:
             if pattern.id == id
         ), None)
 
+    def collect_pattern_instance_info(self, run):
+        return {
+            pattern.id: [
+                instance.collect_broadcast_info()
+                for instance in run.pattern_instances[pattern.id]
+            ]
+            for pattern in self.patterns
+        }
+
     def visible_patterns_with_instances(self, run: RunState):
         for pattern in self.patterns:
             if pattern.hidden or pattern.opacity <= 0:
@@ -185,7 +194,6 @@ class SequenceState:
         pattern = self.get_pattern(id)
         if pattern is None:
             raise KeyError(f"Pattern not found with id {id}")
-        print(f"Apply now to pattern {id=}, {show_solo=}, {hidden=}")
         if show_solo is True:
             self.solo_pattern_id = id
         if hidden is not None:

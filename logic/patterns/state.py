@@ -1,6 +1,6 @@
 import abc
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict
 
 from logic.color import HsvColor
 
@@ -26,3 +26,6 @@ class PatternInstanceState(abc.ABC):
     @abc.abstractmethod
     def render(self, x: float, y: float) -> HsvColor:
         pass
+
+    def collect_broadcast_info(self) -> Dict:
+        return {}

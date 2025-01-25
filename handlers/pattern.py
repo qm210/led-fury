@@ -39,7 +39,7 @@ class PatternEditHandler(ManHandler):
         })
 
 
-class PatternGifHandler(ManHandler):
+class GifPatternHandler(ManHandler):
     @gen.coroutine
     def post(self):
         arrived_sec = perf_counter()

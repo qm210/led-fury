@@ -1,4 +1,4 @@
-import {ControlButtons} from "./ControlButtons.jsx";
+import {ControlBar} from "./ControlBar.jsx";
 import {LiveView} from "./LiveView.jsx";
 import {PatternEditor} from "../pattern/PatternEditor.jsx";
 import {DebugConsole} from "./DebugConsole.jsx";
@@ -21,7 +21,7 @@ const EditorPage = () => {
                 </div>
                 <div className="flex flex-col bg-slate-100 w-full h-full justify-stretch items-stretch">
                     <LiveView/>
-                    <ControlButtons/>
+                    <ControlBar/>
                 </div>
             </div>
             <DebugConsole/>

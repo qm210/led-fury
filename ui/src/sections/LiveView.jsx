@@ -1,10 +1,11 @@
 import {useWebSocket} from "../api/useWebSocket.js";
-import {useEffect, useMemo, useRef, useState, useCallback} from "react";
+import {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import Loader from "../utils/Loader.jsx";
 import {signal} from "@preact/signals";
 import {currentGeometry} from "../signals/setup.js";
 import {calculateCssColor, isColorBright} from "../utils/colors.js";
-import {currentRgbArray} from "../signals/sequence.js";
+import {currentRgbArray, updateRgbArray} from "../signals/sequence.js";
+import {HoverInfo, RenderInfo} from "./LiveInfos.jsx";
 
 
 const hover = signal({
@@ -89,7 +90,9 @@ export const LiveView = () => {
             </div>
             <HoverInfo
                 segments={segments}
+                hover={hover.value}
             />
+            <RenderInfo/>
         </LiveViewArea>
     );
 };
@@ -133,45 +136,11 @@ const LiveViewArea = ({children, ...props}) =>
     </div>;
 
 
-const HoverInfo = ({segments}) => {
-
-    const info = useMemo(() => {
-        if (!hover.value?.segment) {
-            return "";
-        }
-        let result = `Pixel ${hover.value.pixel.index + 1}`;
-        if (segments.length > 1) {
-            result = `Segment 0, ` + result;
-        }
-        return result;
-    }, [hover.value]);
-
-    if (!info) {
-        return null;
-    }
-
-    return (
-        <div className={"absolute right-0 bottom-0 p-4"}>
-             <span className={"p-2"}
-                   style={{
-                       backgroundColor: hover.value.pixel?.color,
-                       color: hover.value.pixel?.isBright ? "black" : "white"
-                   }}
-             >
-                {info}
-             </span>
-        </div>
-    );
-};
-
-
 const SegmentLiveView = ({segment, geometry}) => {
     const {message} = useWebSocket();
 
     useEffect(() => {
-        if (message?.rgbValues) {
-            currentRgbArray.value = message.rgbValues;
-        }
+        updateRgbArray(message);
     }, [message]);
 
     return <>

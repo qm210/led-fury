@@ -1,3 +1,4 @@
+import dataclasses
 from dataclasses import dataclass, field
 from math import floor
 from pathlib import Path
@@ -131,3 +132,10 @@ class GifPatternState(PatternInstanceState):
         # TODO: for now, truncate coordinates -> improve by interpolating when necessary
         rgb = frame[int(x), int(y)]
         return HsvColor.from_rgb(*rgb, scale=255)
+
+    def collect_broadcast_info(self):
+        return {
+            "frameCursor": self.frame_index + self.frame_fractional,
+            "nFrames": self._reference.n_frames,
+            "nBytes": self._reference.n_bytes,
+        }

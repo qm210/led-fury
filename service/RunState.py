@@ -65,6 +65,13 @@ class RunState:
     def to_json(self):
         return json.dumps(self.__dict__, default=str)
 
+    def collect_broadcast_info(self, state: "SequenceState"):
+        return {
+            "since": self.start_sec,
+            "second": self.current_sec,
+            "instances": state.collect_pattern_instance_info(self)
+        }
+
     def start_sequence_process(self, manager: "SequenceMan"):
         self.process = PeriodicCallback(manager.run_sequence_step, manager.state.update_ms)
         self.process.start()
@@ -83,7 +90,7 @@ class RunState:
 
             for instance in self.pattern_instances[pattern.id]:
                 apply_fade(instance.pixels, pattern.template.fade)
-                instance.proceed_motion(self)
+                instance.state.proceed(self, verbose=state.verbose)
                 instance.render(state)
 
     def spawn_instance(self, pattern: "Pattern", empty_pixels: HsvColorArray):

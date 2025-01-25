@@ -57,6 +57,7 @@ export const DebugConsole = () => {
         debugOverwrite.value = null;
         const prefix = title ? `${title} = ` : "";
         setLog(prefix + asLog(r));
+        setCollapsed(false);
     };
 
 
@@ -99,10 +100,10 @@ export const DebugConsole = () => {
     return (
         <div class="self-stretch p-2 flex flex-col gap-2"
              style={{
-                 minWidth: "15vw",
+                 minWidth: "17vw",
                  position: collapsed ? "absolute" : undefined,
                  right: 0,
-                 backgroundColor: "#FFFFFF77",
+                 backgroundColor: "#FFFFFF55",
              }}
         >
             <div class={"flex flex-row items-center gap-2 text"}>
@@ -111,7 +112,7 @@ export const DebugConsole = () => {
                 </div>
                 {
                     debugOverwrite.value &&
-                    <span className={"text-red-800 font-bold"}>
+                    <span className={"text-black font-bold"}>
                         {debugOverwrite.value.source}
                     </span>
                 }

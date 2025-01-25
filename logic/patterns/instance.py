@@ -11,7 +11,6 @@ from logic.patterns.templates.PointPattern import PointPattern
 
 if TYPE_CHECKING:
     from model.state import SequenceState
-    from service.RunState import RunState
 
 
 class MixMode(Enum):
@@ -38,9 +37,6 @@ class PatternInstance:
             else MixMode.Replace
         )
 
-    def proceed_motion(self, run: "RunState"):
-        self.state.proceed(run, self.template)
-
     def render(self, state: "SequenceState"):
         for index, x, y in state.geometry.iterate():
             try:
@@ -58,3 +54,9 @@ class PatternInstance:
                 self.pixels[index].add(color)
             case _:
                 raise ValueError("Invalid Mixing Mode")
+
+    def collect_broadcast_info(self):
+        return {
+            "spawnedAt": self.spawned_sec,
+            **self.state.collect_broadcast_info()
+        }

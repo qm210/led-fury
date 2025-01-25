@@ -1,7 +1,8 @@
+import dataclasses
 from copy import deepcopy
 from dataclasses import dataclass, field
 from math import exp, sqrt
-from typing import List, TYPE_CHECKING
+from typing import List, TYPE_CHECKING, Dict
 
 from logic.color import HsvColor
 from logic.patterns import PointMotion, BoundaryBehaviour, MotionType
@@ -149,3 +150,12 @@ class PointPatternState(PatternInstanceState):
     def render(self, x: float, y: float) -> HsvColor:
         intensity = self.get_intensity(x, y)
         return self.color.copy(scale_v=intensity)
+
+    def collect_broadcast_info(self) -> Dict:
+        return {
+            "pos": self.pos,
+            "vel": self.vel,
+            "acc": self.acc,
+            "size": self.size,
+            "color": self.color.to_rgb()
+        }

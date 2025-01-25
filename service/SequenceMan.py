@@ -52,7 +52,7 @@ class SequenceMan:
     def make_sender(self):
         return UdpSender.make(self.setup)
 
-    def broadcast_colors(self):
+    def broadcast_colors(self, **extra_args):
         no_previous_sender = self.sender is None
         if no_previous_sender:
             self.sender = self.make_sender()
@@ -60,7 +60,11 @@ class SequenceMan:
             self.state.rgb_value_list,
             close=no_previous_sender
         )
-        WebSocketHandler.send_message({"rgbValues": self.state.rgb_value_list})
+        websocket_message = {
+            "rgbValues": self.state.rgb_value_list,
+            **extra_args
+        }
+        WebSocketHandler.send_message(websocket_message)
         if no_previous_sender:
             self.sender = None
 
@@ -87,14 +91,15 @@ class SequenceMan:
             self.run = RunState()
         self.apply_setup_change()
 
-    def shuffle_pattern_colors(self):
-        print("shuffle pattern colors because it is fun.")
+    def apply_desired_randomization(self):
         for pattern, instance in self.state.visible_patterns_with_instances(self.run):
-            instance.state.color.randomize(
-                h=pattern.template.hue_delta,
-                s=pattern.template.sat_delta,
-                v=pattern.template.val_delta,
-            )
+            if pattern.type is PatternType.Point:
+                print(f"Pattern {pattern.id}: shuffle pattern colors because it is fun.")
+                instance.state.color.randomize(
+                    h=pattern.template.hue_delta,
+                    s=pattern.template.sat_delta,
+                    v=pattern.template.val_delta,
+                )
 
     @property
     def running(self):
@@ -103,11 +108,13 @@ class SequenceMan:
     def run_sequence_step(self):
         self.run.proceed(self.state)
         self.state.render(self.run)
-        self.broadcast_colors()
+        self.broadcast_colors(
+            **self.run.collect_broadcast_info(self.state)
+        )
         self.run.update_times()
 
     def start_sequence(self):
-        self.shuffle_pattern_colors()
+        self.apply_desired_randomization()
         if self.running:
             return
         self.sender = self.make_sender()
@@ -130,7 +137,9 @@ class SequenceMan:
         reached_second = yield self.run.seek(self.state)
         self.state.render(self.run)
         if broadcast:
-            self.broadcast_colors()
+            self.broadcast_colors(
+                second=second
+            )
         return reached_second
 
     @gen.coroutine

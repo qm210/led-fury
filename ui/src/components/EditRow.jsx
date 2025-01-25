@@ -30,7 +30,7 @@ export const EditRow = ({
         <EditRowForDimension
             dimIndex={dim}
             key={dim}
-            editKey={[editKey, dim]}
+            editKey={[editKey, isVector ? dim : null]}
             getDefault={getDefault}
             getExtra={getExtra}
             header={

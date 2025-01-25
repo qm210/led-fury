@@ -3,6 +3,9 @@ import {countDecimalPlaces} from "../utils/math.js";
 
 const NUMERIC_REGEX = /^-?[0-9]+([,.][0-9]+)?$/;
 
+const sensitivity = 0.1;
+
+
 export const DragNumberInput = ({
     value,
     onChange,
@@ -13,19 +16,7 @@ export const DragNumberInput = ({
 }) => {
     const [field, setField] = useState(value);
     const [dragState, setDragState] = useState(null);
-
-    onChange = onChange ?? (() => {});
-
-    const clamped = (value) => {
-        let result = +value;
-        if (min !== undefined && result < min) {
-            result = min;
-        }
-        if (max !== undefined && result > max) {
-            result = max;
-        }
-        return result;
-    };
+    const [disableDrag, setDisableDrag] = useState(false);
 
     const onKeyPress = (event) => {
         let newValue = event.target.value.replace(",", ".");
@@ -33,17 +24,22 @@ export const DragNumberInput = ({
         if (isNaN) {
             return;
         }
-        newValue = clamped(newValue);
+        newValue = clamped(newValue, min, max);
         setField(newValue);
         onChange(newValue);
     };
 
     const startDrag = (event) => {
+        if (disableDrag) {
+            return;
+        }
         setDragState({
             initX: event.clientX,
             initValue: +field,
             step,
             decimalPlaces: countDecimalPlaces(step),
+            min,
+            max
         });
     };
 
@@ -54,11 +50,7 @@ export const DragNumberInput = ({
             if (dragState?.initValue === undefined) {
                 return;
             }
-            newValue = dragState.initValue + dragState.step * (event.clientX - dragState.initX);
-            newValue = clamped(newValue);
-            if (dragState.decimalPlaces > 0) {
-                newValue = +newValue.toFixed(dragState.decimalPlaces);
-            }
+            newValue = getValueFromShift(dragState, event.clientX);
             setField(newValue);
         };
 
@@ -94,13 +86,40 @@ export const DragNumberInput = ({
             onKeyUp={onKeyPress}
             onMouseDown={startDrag}
             onDblClick={onDoubleClick}
-            onFocus={e => e.target.select()}
-            class={"w-full cursor-ew-resize text-center"}
+            onBlur={() => setDisableDrag(false)}
+            onClick={e => {
+                setDisableDrag(true);
+                e.target.select();
+            }}
+            class={"w-full text-center"}
             style={{
                 border: "1px solid #ddd",
                 borderRadius: 1,
-                userSelect: "none"
+                userSelect: "none",
+                cursor: disableDrag ? "text" : "ew-resize"
             }}
         />
     )
+};
+
+const clamped = (value, min, max) => {
+    let result = +value;
+    if (min !== undefined && result < min) {
+        result = min;
+    }
+    if (max !== undefined && result > max) {
+        result = max;
+    }
+    return result;
+};
+
+const getValueFromShift = (dragState, eventX) => {
+    const shift = Math.round(sensitivity * (eventX - dragState.initX));
+    let result = dragState.initValue + shift * dragState.step;
+    result = clamped(result, dragState.min, dragState.max);
+    const backup = result;
+    if (dragState.decimalPlaces > 0) {
+        result = +result.toFixed(dragState.decimalPlaces);
+    }
+    return result;
 };

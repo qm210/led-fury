@@ -2,6 +2,7 @@ import { useLocation } from 'preact-iso';
 import {useWebSocket} from "../api/useWebSocket.js";
 import {SquarePower} from "lucide-preact";
 import {shutdownBackend} from "../api/api.js";
+import {currentRgbArray, lastRgbUpdateInfo} from "../signals/sequence.js";
 
 export function Header() {
 	const { url } = useLocation();
@@ -33,12 +34,24 @@ const WebsocketInfo = () => {
 			text: "Socket disconnected!"
 		};
 
+	const lastReceivedInfo =
+		lastRgbUpdateInfo.value.receivedAt
+			? `Last Update at ${lastRgbUpdateInfo.value.receivedAt.toLocaleTimeString()}`
+			: '';
+
 	return (
 		<div
 			title={ws.url}
-			onClick={() => console.log(ws)}
+			onClick={() => console.log(ws, currentRgbArray.value)}
+			style={{color: props.color}}
 		>
-			<span style={{color: props.color}}>
+			{
+				lastReceivedInfo &&
+				<span className={"opacity-40"}>
+					{lastReceivedInfo}{" \u2014 "}
+				</span>
+			}
+			<span>
 				{props.text}
 			</span>
 		</div>

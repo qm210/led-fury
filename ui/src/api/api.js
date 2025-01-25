@@ -73,9 +73,11 @@ export const useSequenceApi = (options = {}) => {
         ...options,
     }));
 
-    const start = () => axios.post("/sequence/start");
+    const start = () =>
+        axios.post("/sequence/start");
 
-    const stop = () => axios.post("/sequence/stop");
+    const stop = () =>
+        axios.post("/sequence/stop");
 
     const seek = (second) =>
         axios.post("/sequence/seek", {second});
@@ -83,7 +85,7 @@ export const useSequenceApi = (options = {}) => {
     return {
         current: query.data?.data,
         readCurrent: query.refetch,
-        start: start.mutateAsync,
+        start,
         stop,
         seek,
     };
