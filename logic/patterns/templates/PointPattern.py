@@ -138,7 +138,7 @@ class PointPatternState(PatternInstanceState):
     def gauss_intensity(self, x, y):
         def square_delta(dim):
             coord = y if dim == 1 else x
-            w = max(1e-4, self.size[dim] / tau)
+            w = max(1e-4, self.size[dim] / 4)
             diff = coord - self.pos[dim]
             return diff * diff / (w * w)
 

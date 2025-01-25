@@ -143,12 +143,14 @@ const PointPatternRows = ({area}) => <>
         isVector
         getDefault={(p, d) => p.template.size[d]}
         numeric={{
-            min: 1,
-            max: area.width
+            min: 0.5,
+            max: 2 * area.width,
+            step: 0.5,
         }}
         numericY={{
-            min: 1,
-            max: area.height
+            min: 0.5,
+            max: 2 * area.height,
+            step: 0.5,
         }}
     />
     {/* TODO: Color Behavior might be outside the PointPattern -- later. */}

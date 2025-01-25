@@ -51,7 +51,7 @@ class GifPattern(PatternTemplate):
                     np.array(
                         frame.copy().convert('RGB').getdata(),
                         dtype=np.uint8
-                    ).reshape(width, height, n_channels)
+                    ).reshape(height, width, n_channels)
                 )
         result = cls(
             filename=file.name,
@@ -83,7 +83,7 @@ class GifPattern(PatternTemplate):
 
     def update_resized(self, size: Tuple[int, int]):
         width, height = size
-        self.resized_frames = np.zeros((self.n_frames, width, height, n_channels))
+        self.resized_frames = np.zeros((self.n_frames, height, width, n_channels))
         for f in range(self.n_frames):
             for ch in range(n_channels):
                 frame = self._original_frames[f, :, :, ch]
@@ -130,7 +130,7 @@ class GifPatternState(PatternInstanceState):
         index = self.frame_index % len(frames)
         frame = frames[index]
         # TODO: for now, truncate coordinates -> improve by interpolating when necessary
-        rgb = frame[int(x), int(y)]
+        rgb = frame[int(y), int(x)]
         return HsvColor.from_rgb(*rgb, scale=255)
 
     def collect_broadcast_info(self):

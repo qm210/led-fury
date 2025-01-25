@@ -137,7 +137,12 @@ class SequenceState:
                 pixel = instance.pixels[pixel_index]
                 if pixel is None:
                     continue
-                mix = sqrt(0.01 * pixel.v) if pixel.v > 0 else 0
+                mix = 0.01 * pixel.v * pattern.opacity
+                if mix <= 0:
+                    continue
+                # this improved things:
+                mix = sqrt(mix)
+
                 rgb = pixel.to_float_rgb()
                 for b in range(self.bytesize):
                     try:
@@ -150,7 +155,7 @@ class SequenceState:
 
                 if self.verbose:
                     print(f"-- Fill into RGB array: Pixel {pixel_index} => index {index}: color={rgb}, " +
-                                  f"mix {mix}, result={self._rgb_array[index:index + self.bytesize]}")
+                          f"mix {mix}, result={self._rgb_array[index:index + self.bytesize]}")
 
         self._rgb_array = np.clip(
             np.multiply(self._rgb_array, 255),

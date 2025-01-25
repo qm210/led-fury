@@ -124,13 +124,18 @@ class Investigator:
             x_lower = x_def[i]
             x_upper = x_def[i+1]
             dx = x_upper - x_lower
+
             v_lower = plot_values[i]
             v_upper = plot_values[i+1]
+            if v_upper == v_lower:
+                continue
+
             r = (half_value - v_lower) / (v_upper - v_lower)
             if v_lower <= half_value <= v_upper:
                 half_value_rise_x = x_lower + r * dx
             if v_lower >= half_value >= v_upper:
                 half_value_fall_x = x_lower + r * dx
+
         if half_value_rise_x is not None and half_value_fall_x is not None:
             half_width = half_value_fall_x - half_value_rise_x
         analysis = {
