@@ -162,3 +162,6 @@ export const storeToFile = (filename = "") =>
 
 export const shutdownBackend = () =>
     axios.post("/shutdown");
+
+export const runInvestigation = () =>
+    axios.post("/investigate");

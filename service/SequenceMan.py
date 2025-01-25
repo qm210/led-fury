@@ -5,7 +5,6 @@ from typing import Optional, List, Tuple, Union
 
 from tornado import gen
 from tornado.httputil import HTTPFile
-from tornado.ioloop import IOLoop
 
 from app.file_system import ensure_path
 from handlers.websocket import WebSocketHandler
@@ -16,7 +15,8 @@ from model.setup import PixelSegment, ControllerSetup
 from service.UdpSender import UdpSender
 from service.RunState import RunState
 
-CONTROLLER_HOST = "192.168.178.60"  # is wled1.local (would that name work? we'll see later)
+# CONTROLLER_HOST = "192.168.178.60"  # is wled1.local (would that name work? we'll see later)
+CONTROLLER_HOST = "192.168.178.46"  # is wled.local, the Vorhang
 CONTROLLER_PORT = 65506
 # for Hyperion protoclol
 # CONTROLLER_PORT = 19446  # is that undocumented RGB port that you cannot change via the WLED UI ;)
@@ -92,7 +92,7 @@ class SequenceMan:
         self.apply_setup_change()
 
     def apply_desired_randomization(self):
-        for pattern, instance in self.state.visible_patterns_with_instances(self.run):
+        for pattern, instance in self.state.patterns_with_instances(self.run):
             if pattern.type is PatternType.Point:
                 print(f"Pattern {pattern.id}: shuffle pattern colors because it is fun.")
                 instance.state.color.randomize(

@@ -1,7 +1,6 @@
-import dataclasses
 from copy import deepcopy
 from dataclasses import dataclass, field
-from math import exp, sqrt
+from math import exp, sqrt, pi
 from typing import List, TYPE_CHECKING, Dict
 
 from logic.color import HsvColor
@@ -12,6 +11,10 @@ from model.utils import factory2d
 
 if TYPE_CHECKING:
     from service.RunState import RunState
+
+
+sqrt2pi2 = 2 * sqrt(2 * pi)
+tau = 2 * pi
 
 
 @dataclass
@@ -132,23 +135,25 @@ class PointPatternState(PatternInstanceState):
             if verbose:
                 print("->", self.pos[dim])
 
-    def get_intensity(self, x, y):
-        def delta(dim):
+    def gauss_intensity(self, x, y):
+        def square_delta(dim):
             coord = y if dim == 1 else x
-            return sqrt(abs(coord - self.pos[dim]) / self.size[dim])
+            w = max(1e-4, self.size[dim] / tau)
+            diff = coord - self.pos[dim]
+            return diff * diff / (w * w)
 
         power = [
-            delta(dim)
+            square_delta(dim)
             for dim in range(len(self.pos))
         ]
-        return exp(-sum(power))
+        return exp(-sqrt(sum(power)))
 
-        # TODO: offer different modes:
+        # TODO: might offer different modes. one day.
         # power_theta = 1 if max(x_power, y_power) <= 1 else 0
         # power_gauss = exp(-x_power*x_power - y_power*y_power)
 
     def render(self, x: float, y: float) -> HsvColor:
-        intensity = self.get_intensity(x, y)
+        intensity = self.gauss_intensity(x, y)
         return self.color.copy(scale_v=intensity)
 
     def collect_broadcast_info(self) -> Dict:

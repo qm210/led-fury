@@ -54,9 +54,6 @@ export const useWebSocket = () => {
 
     useEffect(() => {
         const socket = openWebsocket();
-        return () => {
-            socket.close();
-        }
     }, []);
 
     return {

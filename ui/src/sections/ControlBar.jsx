@@ -1,12 +1,12 @@
 import * as Lucide from "lucide-preact";
-import {storeToFile, useSequenceApi} from "../api/api.js";
-
+import {runInvestigation, storeToFile, useSequenceApi} from "../api/api.js";
 import {synchronizedPatterns} from "../signals/pattern.js";
 import {ActionButton, ActionButtons} from "../components/ActionButtons.jsx";
 import {SpinNumberInput} from "../components/SpinNumberInput.jsx";
 import {useState} from "react";
 import {synchronize} from "../signals/app.js";
 import {currentSecond} from "../signals/sequence.js";
+import {overwriteDebug} from "./DebugConsole.jsx";
 
 
 export const ControlBar = () => {
@@ -22,7 +22,8 @@ export const ControlBar = () => {
                 actions={[
                     {
                         element: Lucide.ListRestart,
-                        onClick: () => synchronize(true),
+                        onClick: () =>
+                            synchronize(true),
                         tooltip: "Synchronize with Backend",
                     }, {
                         element: Lucide.Play,
@@ -34,6 +35,17 @@ export const ControlBar = () => {
                         element: Lucide.Square,
                         onClick: stop,
                         tooltip: "Stop Sequence",
+                    }, {
+                        element: Lucide.Microscope,
+                        onClick: async () => {
+                            const response = await runInvestigation();
+                            console.log("Investigation", response.data);
+                            overwriteDebug("investigation", response.data, true);
+                        },
+                        tooltip: "Investigate running instances...",
+                        style: {
+                            marginLeft: "1rem",
+                        }
                     }]}
             />
             <div class={"flex-1"}>

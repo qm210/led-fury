@@ -101,12 +101,14 @@ class RunState:
         if instance_state is None:
             raise ValueError("Cannot spawn instance of pattern yet... srylol")
 
+        count = len(self.pattern_instances[pattern.id])
         self.pattern_instances[pattern.id].append(
             PatternInstance(
                 state=instance_state,
                 template=pattern.template,
                 pixels=empty_pixels,
                 pattern_id=pattern.id,
+                instance_id=f"nr{count + 1}",
                 spawned_sec=self.current_sec,
             )
         )

@@ -24,6 +24,7 @@ class PatternInstance:
     state: PatternInstanceState
     pixels: HsvColorArray
     # for debugging:
+    instance_id: str
     pattern_id: str
     spawned_sec: float = 0
 

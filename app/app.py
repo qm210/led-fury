@@ -8,6 +8,7 @@ import tornado
 
 from app.json import JsonEncoder
 from handlers.geometry import GeometryHandler
+from handlers.investigate import InvestigateStateHandler
 
 from handlers.main import MainHandler, ShutdownHandler, FileStoreHandler
 from handlers.overall import OverallStateHandler, OverallRunHandler, OverallOptionsHandler
@@ -42,6 +43,7 @@ class Application(tornado.web.Application):
                 (r"/api/overall/state", OverallStateHandler),
                 (r"/api/overall/run", OverallRunHandler),
                 (r"/api/overall/options", OverallOptionsHandler),
+                (r"/api/investigate", InvestigateStateHandler),
 
                 (r"/api/geometry", GeometryHandler),
 

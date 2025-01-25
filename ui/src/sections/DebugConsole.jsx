@@ -9,14 +9,19 @@ import {debugCollapsedKey, useSessionStoredState} from "../signals/storage.js";
 
 const debugOverwrite = signal({
     source: null,
-    content: {}
+    content: {},
 });
 
-export const overwriteDebug = (source, content) => {
+const triggerExpand = signal(false);
+
+export const overwriteDebug = (source, content, forceExpand = false) => {
     debugOverwrite.value = {
         source,
-        content
+        content,
     };
+    if (forceExpand) {
+        triggerExpand.value = true;
+    }
 };
 
 
@@ -52,6 +57,13 @@ export const DebugConsole = () => {
             setCollapsedIfTouchedBefore(false);
         }
     }, [log]);
+
+    useEffect(() => {
+        if (triggerExpand.value) {
+            setCollapsed(false);
+            triggerExpand.value = false;
+        }
+    }, [triggerExpand.value]);
 
     const updateLog = (title) => (r) => {
         debugOverwrite.value = null;

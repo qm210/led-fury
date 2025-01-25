@@ -116,11 +116,14 @@ class SequenceState:
             for pattern in self.patterns
         }
 
-    def visible_patterns_with_instances(self, run: RunState):
+    def patterns_with_instances(self, run: RunState, only_visible=True, only_pattern_type=None):
         for pattern in self.patterns:
-            if pattern.hidden or pattern.opacity <= 0:
-                continue
-            if self.solo_pattern_id is not None and pattern.id != self.solo_pattern_id:
+            if only_visible:
+                if pattern.hidden or pattern.opacity <= 0:
+                    continue
+                if self.solo_pattern_id is not None and pattern.id != self.solo_pattern_id:
+                    continue
+            if only_pattern_type is not None and pattern.type != only_pattern_type:
                 continue
             for instance in run.pattern_instances[pattern.id]:
                 yield pattern, instance
@@ -130,7 +133,7 @@ class SequenceState:
         for coordinate in self.geometry.coordinates:
             pixel_index = coordinate.index
             index = self.bytesize * pixel_index
-            for pattern, instance in self.visible_patterns_with_instances(run):
+            for pattern, instance in self.patterns_with_instances(run):
                 pixel = instance.pixels[pixel_index]
                 if pixel is None:
                     continue

@@ -2,3 +2,7 @@
 __pycache__/
 
 *.fury
+*.fury.*
+gif_store/
+
+sample_files/

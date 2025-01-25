@@ -107,7 +107,7 @@ tr.segment-row:not(.details) > td {
 }
 
 .segment-row .number-input-spinner > input {
-    width: 3rem;
+    width: 3.5rem;
 }
 
 .segment-row select {
