@@ -4,6 +4,16 @@
 
 Based on current repository v0.16.0, there are various fields and a lot of different case routings.
 
+* Essential:
+  * in the Sync Settings, one of the UDP ports must be set to 65506 (for now)
+  * Also, I believe you need
+    * "Receive... Segment options, bounds" (or everything)
+    * "Receive UDP realtime"
+    * "Respect LED maps"
+  * (there might be more)
+
+Findings from reading WLED code...
+
 * `rgbUdp` is a UDP interface hardcoded to Port 19446
 * `notifierUdp`
   * `notifier2Udp` seems to have the same functionality as `notifierUdp`, just a supplementary method.  
